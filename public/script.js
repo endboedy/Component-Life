@@ -1,12 +1,8 @@
-function showPage(pageId) {
-  // hide all pages
-  document.querySelectorAll(".page").forEach(page => {
-    page.classList.remove("active");
-  });
-
-  // show selected page
-  document.getElementById(pageId).classList.add("active");
+function showPage(id) {
+  document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
 }
 
-// default show compLife
-showPage("compLife");
+function applyFilter() {
+  alert("Filter applied (dummy)");
+}
