@@ -18,10 +18,10 @@ jobs:
         with:
           node-version: '18'
 
-           - name: Setup Firebase and Deploy
+      - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_COMPONENT_LIFE }}"
           projectId: "component-life"
-          serviceAccountJson: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_COMPONENT_LIFE }}"
-          channelId: "live"
+          channelId: live
