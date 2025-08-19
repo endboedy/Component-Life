@@ -3,7 +3,7 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches:
-      - main  # atau branch yang kamu pakai
+      - main  # deploy setiap kali push ke branch main
 
 jobs:
   build_and_deploy:
@@ -18,10 +18,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Deploy to Firebase
+      - name: Deploy to Firebase Hosting
         run: npx firebase-tools@latest deploy --only hosting --project component-life --json
         env:
           FIREBASE_SERVICE_ACCOUNT_COMPONENT_LIFE: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_COMPONENT_LIFE }}
