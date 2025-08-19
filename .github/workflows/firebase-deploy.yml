@@ -3,25 +3,25 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches:
-      - main
+      - main  # atau branch yang kamu pakai
 
 jobs:
-  deploy:
+  build_and_deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Set up Node.js 20
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: 20
 
-      - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: "${{ secrets.GITHUB_TOKEN }}"
-          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_COMPONENT_LIFE }}"
-          projectId: "component-life"
-          channelId: live
+      - name: Install dependencies
+        run: npm install
+
+      - name: Deploy to Firebase
+        run: npx firebase-tools@latest deploy --only hosting --project component-life --json
+        env:
+          FIREBASE_SERVICE_ACCOUNT_COMPONENT_LIFE: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_COMPONENT_LIFE }}
