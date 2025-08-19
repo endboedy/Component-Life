@@ -18,8 +18,8 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Setup Firebase and Deploy
-        uses: FirebaseExtended/action-hosting-deploy@v1
+           - name: Setup Firebase and Deploy
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
           projectId: "component-life"
