@@ -18,10 +18,6 @@ jobs:
         with:
           node-version: '20'
 
-      # Hapus step install karena project static tidak butuh build
-      # - name: Install dependencies
-      #   run: npm install
-
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@v2.2.0
         with:
