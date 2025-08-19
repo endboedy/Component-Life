@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(btn.dataset.tab).classList.add('active');
   }));
 
- // ===== Firebase SDK (top-level import) =====
+// ===== Firebase SDK (top-level import) =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
@@ -283,4 +283,5 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
 
