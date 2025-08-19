@@ -18,36 +18,44 @@
   <main class="container">
     <!-- ===================== Comp-Life ===================== -->
     <section id="compLife" class="tab-page active">
-      <div class="row actions">
-        <button id="btnAddNew" class="btn primary">+ Add New Component</button>
-        <select id="filterEquip"><option value="">Equip (All)</option></select>
-        <select id="filterModel"><option value="">Model (All)</option></select>
-        <select id="filterComponent"><option value="">Component (All)</option></select>
-        <button id="btnApplyFilter" class="btn">Filter</button>
-        <button id="btnClearFilter" class="btn ghost">Clear</button>
-      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2>📊 Component Life</h2>
+          <button id="btnAddNew" class="btn primary">+ Add New</button>
+        </div>
+        
+        <!-- Filters -->
+        <div class="filters">
+          <select id="filterEquip"><option value="">Equip (All)</option></select>
+          <select id="filterModel"><option value="">Model (All)</option></select>
+          <select id="filterComponent"><option value="">Component (All)</option></select>
+          <button id="btnApplyFilter" class="btn">Filter</button>
+          <button id="btnClearFilter" class="btn ghost">Clear</button>
+        </div>
 
-      <div class="table-wrap">
-        <table class="data-table" id="compTable">
-          <thead>
-            <tr>
-              <th>Equip</th>
-              <th>Model</th>
-              <th>Component</th>
-              <th>Freq</th>
-              <th>Change Out</th>
-              <th>Next Change</th>
-              <th>Current SMU</th>
-              <th>Life</th>
-              <th>%</th>
-              <th>Rating</th>
-              <th>Remarks</th>
-              <th>Picture</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="compTbody"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table class="data-table" id="compTable">
+            <thead>
+              <tr>
+                <th>Equip</th>
+                <th>Model</th>
+                <th>Component</th>
+                <th>Freq</th>
+                <th>Cost</th>
+                <th>Change Out</th>
+                <th>Next Change</th>
+                <th>SMU</th>
+                <th>Life</th>
+                <th>%</th>
+                <th>Rating</th>
+                <th>Remarks</th>
+                <th>Picture</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="compTbody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -57,7 +65,7 @@
         <div class="card-header">
           <h2>⏱️ Current SMU (Mass Update)</h2>
         </div>
-        <p class="muted">Format satu per baris: <code>Equip,SMU</code> contoh: <code>DT001,3456</code></p>
+        <p class="muted">Format: <code>Equip,SMU</code> per baris. Contoh: <code>DT001,3456</code></p>
         <textarea id="smuBulk" rows="8" placeholder="DT001,3456\nDT002,1200\n..."></textarea>
         <div class="row actions">
           <button id="btnPreviewBulk" class="btn">Preview</button>
@@ -68,31 +76,33 @@
     </section>
   </main>
 
-  <!-- ===== Add/Edit Modal ===== -->
+  <!-- ===== Modal Form Add/Edit ===== -->
   <div id="modalForm" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
-      <h3 id="modalTitle">Add Component</h3>
+      <h3 id="modalTitle">Add / Edit Component</h3>
       <form id="componentForm">
         <div class="form-grid">
-          <label>Equip<input type="text" name="equip" required></label>
-          <label>Model<input type="text" name="model"></label>
-          <label>Component<input type="text" name="component" required></label>
-          <label>Freq<input type="number" name="freq" min="0"></label>
-          <label>Change Out<input type="date" name="changeOut"></label>
-          <label>Current SMU<input type="number" name="smu" min="0"></label>
-          <label>Rating
-            <select name="rating">
-              <option value="">-</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-            </select>
+          <input id="formEquip" placeholder="Equip" required />
+          <input id="formModel" placeholder="Model" />
+          <input id="formComponent" placeholder="Component" required />
+          <input id="formFreq" type="number" min="0" placeholder="Freq" />
+          <input id="formCost" type="number" min="0" step="0.01" placeholder="Cost" />
+          <input id="formChangeOut" type="date" placeholder="Change Out" />
+          <input id="formSMU" type="number" min="0" placeholder="SMU" />
+          <input id="formLife" type="number" min="0" placeholder="Life" readonly />
+          <input id="formPct" type="number" min="0" max="100" placeholder="%" readonly />
+          <select id="formRating">
+            <option value="">-</option>
+            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          </select>
+          <input id="formRemarks" placeholder="Remarks" />
+          <label class="upload-btn">
+            <input id="formPicture" type="file" accept="image/*" />
+            Upload Picture
           </label>
-          <label>Remarks<input type="text" name="remarks"></label>
-          <label>Picture<input type="file" name="picture" accept="image/*"></label>
         </div>
-        <div class="row actions">
-          <button type="submit" class="btn primary">Save</button>
-          <button type="button" class="btn ghost" id="btnCancelModal">Cancel</button>
-        </div>
+        <button type="submit" class="btn primary" id="btnSave">Save</button>
       </form>
     </div>
   </div>
