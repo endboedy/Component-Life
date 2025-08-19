@@ -3,20 +3,26 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches:
-      - main  # ganti kalau branch deploy kamu bukan 'main'
+      - main   # otomatis jalan kalau push ke branch main
 
 jobs:
-  deploy:
+  build_and_deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      # Buat file service account dari secret
-      - name: Create Firebase service account file
+      # Setup Firebase service account dari GitHub Secrets
+      - name: Setup Firebase Service Account
         run: |
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > $HOME/firebase.json
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_COMPONENT_LIFE }}" > $HOME/firebase.json
+
+      # Setup Node.js (pakai versi 20 biar sesuai Firebase CLI terbaru)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       # Install Firebase CLI
       - name: Install Firebase CLI
@@ -24,4 +30,6 @@ jobs:
 
       # Deploy ke Firebase Hosting
       - name: Deploy to Firebase
-        run: firebase deploy --only hosting --project component-life --token "$(cat $HOME/firebase.json | jq -r .private_key_id)"
+        run: |
+          export GOOGLE_APPLICATION_CREDENTIALS="$HOME/firebase.json"
+          firebase deploy --only hosting --project component-life
