@@ -18,78 +18,36 @@
   <main class="container">
     <!-- ===================== Comp-Life ===================== -->
     <section id="compLife" class="tab-page active">
-      <div class="card">
-        <div class="card-header">
-          <h2>📊 Component Life</h2>
-        </div>
-        
-        <!-- Filters -->
-        <div class="filters">
-          <select id="filterEquip"><option value="">Equip (All)</option></select>
-          <select id="filterModel"><option value="">Model (All)</option></select>
-          <select id="filterComponent"><option value="">Component (All)</option></select>
-          <button id="btnApplyFilter" class="btn">Filter</button>
-          <button id="btnClearFilter" class="btn ghost">Clear</button>
-        </div>
+      <div class="row actions">
+        <button id="btnAddNew" class="btn primary">+ Add New Component</button>
+        <select id="filterEquip"><option value="">Equip (All)</option></select>
+        <select id="filterModel"><option value="">Model (All)</option></select>
+        <select id="filterComponent"><option value="">Component (All)</option></select>
+        <button id="btnApplyFilter" class="btn">Filter</button>
+        <button id="btnClearFilter" class="btn ghost">Clear</button>
+      </div>
 
-        <!-- Table wrapper for sticky header & scroll -->
-        <div class="table-wrap">
-          <table class="data-table" id="compTable">
-            <thead>
-              <tr>
-                <th>Equip</th>
-                <th>Model</th>
-                <th>Component</th>
-                <th>Freq</th>
-                <th>Cost</th>
-                <th>Change Out</th>
-                <th>Next Change</th>
-                <th>SMU</th>
-                <th>Life</th>
-                <th>%</th>
-                <th>Rating</th>
-                <th>Remarks</th>
-                <th>Picture</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="compTbody">
-              <!-- rows injected by script.js -->
-            </tbody>
-            
-            <!-- Add New Row (always at bottom) -->
-            <tfoot>
-              <tr class="add-row">
-                <td><input id="addEquip" placeholder="Equip" /></td>
-                <td><input id="addModel" placeholder="Model" /></td>
-                <td><input id="addComponent" placeholder="Component" /></td>
-                <td><input id="addFreq" type="number" min="0" placeholder="Freq" /></td>
-                <td><input id="addCost" type="number" min="0" step="0.01" placeholder="Cost" /></td>
-                <td><input id="addChangeOut" type="date" /></td>
-                <td><input id="addNextChange" type="date" /></td>
-                <td><input id="addSMU" type="number" min="0" placeholder="SMU" /></td>
-                <td><input id="addLife" type="number" min="0" placeholder="Life" /></td>
-                <td><input id="addPct" type="number" min="0" max="100" placeholder="%" /></td>
-                <td>
-                  <select id="addRating">
-                    <option value="">-</option>
-                    <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-                  </select>
-                </td>
-                <td><input id="addRemarks" placeholder="Remarks" /></td>
-                <td>
-                  <label class="upload-btn">
-                    <input id="addPicture" type="file" accept="image/*" />
-                    Upload
-                  </label>
-                </td>
-                <td>
-                  <button id="btnAdd" class="btn primary">+ Save</button>
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+      <div class="table-wrap">
+        <table class="data-table" id="compTable">
+          <thead>
+            <tr>
+              <th>Equip</th>
+              <th>Model</th>
+              <th>Component</th>
+              <th>Freq</th>
+              <th>Change Out</th>
+              <th>Next Change</th>
+              <th>Current SMU</th>
+              <th>Life</th>
+              <th>%</th>
+              <th>Rating</th>
+              <th>Remarks</th>
+              <th>Picture</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="compTbody"></tbody>
+        </table>
       </div>
     </section>
 
@@ -109,6 +67,35 @@
       </div>
     </section>
   </main>
+
+  <!-- ===== Add/Edit Modal ===== -->
+  <div id="modalForm" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3 id="modalTitle">Add Component</h3>
+      <form id="componentForm">
+        <div class="form-grid">
+          <label>Equip<input type="text" name="equip" required></label>
+          <label>Model<input type="text" name="model"></label>
+          <label>Component<input type="text" name="component" required></label>
+          <label>Freq<input type="number" name="freq" min="0"></label>
+          <label>Change Out<input type="date" name="changeOut"></label>
+          <label>Current SMU<input type="number" name="smu" min="0"></label>
+          <label>Rating
+            <select name="rating">
+              <option value="">-</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+          </label>
+          <label>Remarks<input type="text" name="remarks"></label>
+          <label>Picture<input type="file" name="picture" accept="image/*"></label>
+        </div>
+        <div class="row actions">
+          <button type="submit" class="btn primary">Save</button>
+          <button type="button" class="btn ghost" id="btnCancelModal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- Firebase SDK & App code -->
   <script type="module" src="script.js"></script>
