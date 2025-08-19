@@ -159,15 +159,19 @@ function computePct(life,freq){
   return Math.round(life/freq*100);
 }
 
-// ===== Modal Add/Edit =====
-btnAddNew.addEventListener('click', ()=>{
-  editId=null;
-  modalTitle.innerText="Add New Component";
+// ===== Add/Edit =====
+btnAddNew.addEventListener('click', () => {
+  editId = null;
+  modalTitle.textContent = 'Add Component';
   form.reset();
-  modal.style.display='block';
+  modal.style.display = 'block';
 });
-spanClose.addEventListener('click', ()=>modal.style.display='none');
-window.addEventListener('click', e=>{if(e.target===modal) modal.style.display='none';});
+
+// modal close
+spanClose.addEventListener('click', () => modal.style.display = 'none');
+window.addEventListener('click', e => {
+  if (e.target === modal) modal.style.display = 'none';
+});
 
 // ===== Save form =====
 form.addEventListener('submit', async e=>{
@@ -262,3 +266,4 @@ applyBtn.addEventListener('click', async ()=>{
   }
   alert('SMU Updated!');
 });
+
