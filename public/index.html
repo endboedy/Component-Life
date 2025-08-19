@@ -1,94 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Component Life</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
+  <header class="app-header">
     <h1>⚙️ Component Life</h1>
-    <nav>
-      <button onclick="showPage('compLife')">Comp-Life</button>
-      <button onclick="showPage('currentSMU')">Current SMU</button>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="compLife">Comp‑Life</button>
+      <button class="tab-btn" data-tab="currentSMU">Current SMU</button>
     </nav>
   </header>
 
-  <main>
-    <!-- Comp-Life Page -->
-    <section id="compLife" class="page">
-      <h2>📊 Component Life</h2>
-      
-      <!-- Filter -->
-      <div class="filters">
-        <select id="filterEquip"><option>Equip</option></select>
-        <select id="filterModel"><option>Model</option></select>
-        <select id="filterComponent"><option>Component</option></select>
-        <button onclick="applyFilter()">Filter</button>
-      </div>
+  <main class="container">
+    <!-- ===================== Comp-Life ===================== -->
+    <section id="compLife" class="tab-page active">
+      <div class="card">
+        <div class="card-header">
+          <h2>📊 Component Life</h2>
+        </div>
+        
+        <!-- Filters -->
+        <div class="filters">
+          <select id="filterEquip"><option value="">Equip (All)</option></select>
+          <select id="filterModel"><option value="">Model (All)</option></select>
+          <select id="filterComponent"><option value="">Component (All)</option></select>
+          <button id="btnApplyFilter" class="btn">Filter</button>
+          <button id="btnClearFilter" class="btn ghost">Clear</button>
+        </div>
 
-      <!-- Tambah Baris -->
-      <div class="form-add">
-        <input type="text" placeholder="Equip">
-        <input type="text" placeholder="Model">
-        <input type="text" placeholder="Component">
-        <input type="number" placeholder="Freq">
-        <input type="number" placeholder="Cost">
-        <input type="date" placeholder="Change Out">
-        <input type="date" placeholder="Next Change">
-        <input type="number" placeholder="SMU">
-        <input type="number" placeholder="Life">
-        <input type="number" placeholder="%">
-        <button>+ Tambah</button>
+        <!-- Table wrapper for sticky header & scroll -->
+        <div class="table-wrap">
+          <table class="data-table" id="compTable">
+            <thead>
+              <tr>
+                <th>Equip</th>
+                <th>Model</th>
+                <th>Component</th>
+                <th>Freq</th>
+                <th>Cost</th>
+                <th>Change Out</th>
+                <th>Next Change</th>
+                <th>SMU</th>
+                <th>Life</th>
+                <th>%</th>
+                <th>Rating</th>
+                <th>Remarks</th>
+                <th>Picture</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="compTbody">
+              <!-- rows injected by script.js -->
+            </tbody>
+            
+            <!-- Add New Row (always at bottom) -->
+            <tfoot>
+              <tr class="add-row">
+                <td><input id="addEquip" placeholder="Equip" /></td>
+                <td><input id="addModel" placeholder="Model" /></td>
+                <td><input id="addComponent" placeholder="Component" /></td>
+                <td><input id="addFreq" type="number" min="0" placeholder="Freq" /></td>
+                <td><input id="addCost" type="number" min="0" step="0.01" placeholder="Cost" /></td>
+                <td><input id="addChangeOut" type="date" /></td>
+                <td><input id="addNextChange" type="date" /></td>
+                <td><input id="addSMU" type="number" min="0" placeholder="SMU" /></td>
+                <td><input id="addLife" type="number" min="0" placeholder="Life" /></td>
+                <td><input id="addPct" type="number" min="0" max="100" placeholder="%" /></td>
+                <td>
+                  <select id="addRating">
+                    <option value="">-</option>
+                    <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+                  </select>
+                </td>
+                <td><input id="addRemarks" placeholder="Remarks" /></td>
+                <td>
+                  <label class="upload-btn">
+                    <input id="addPicture" type="file" accept="image/*" />
+                    Upload
+                  </label>
+                </td>
+                <td>
+                  <button id="btnAdd" class="btn primary">+ Save</button>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
-
-      <!-- Tabel -->
-      <table>
-        <thead>
-          <tr>
-            <th>Equip</th>
-            <th>Model</th>
-            <th>Component</th>
-            <th>Freq</th>
-            <th>Cost</th>
-            <th>Change Out</th>
-            <th>Next Change</th>
-            <th>SMU</th>
-            <th>Life</th>
-            <th>%</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="compTable">
-          <tr>
-            <td>CO4421</td>
-            <td>777</td>
-            <td>Engine</td>
-            <td>5000</td>
-            <td>$12,000</td>
-            <td>2025-06-10</td>
-            <td>2025-12-10</td>
-            <td>3245</td>
-            <td>4800</td>
-            <td>68%</td>
-            <td><button>Edit</button></td>
-          </tr>
-        </tbody>
-      </table>
     </section>
 
-    <!-- Current SMU Page -->
-    <section id="currentSMU" class="page hidden">
-      <h2>⏱️ Current SMU</h2>
-      <p>Update SMU secara massal:</p>
-      <div class="form-update">
-        <textarea placeholder="Masukkan data (Equip, SMU) baris per baris"></textarea>
-        <button>Update</button>
+    <!-- ===================== Current SMU ===================== -->
+    <section id="currentSMU" class="tab-page">
+      <div class="card">
+        <div class="card-header">
+          <h2>⏱️ Current SMU (Mass Update)</h2>
+        </div>
+        <p class="muted">Format satu per baris: <code>Equip,SMU</code> contoh: <code>DT001,3456</code></p>
+        <textarea id="smuBulk" rows="8" placeholder="DT001,3456\nDT002,1200\n..."></textarea>
+        <div class="row actions">
+          <button id="btnPreviewBulk" class="btn">Preview</button>
+          <button id="btnApplyBulk" class="btn primary">Apply Update</button>
+        </div>
+        <div id="bulkResult" class="muted"></div>
       </div>
     </section>
   </main>
 
-  <script src="script.js"></script>
+  <!-- Firebase SDK & App code -->
+  <script type="module" src="script.js"></script>
 </body>
 </html>
