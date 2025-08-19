@@ -10,26 +10,85 @@
   <header>
     <h1>⚙️ Component Life</h1>
     <nav>
-      <button onclick="showPage('compLife')">Comp_Life</button>
+      <button onclick="showPage('compLife')">Comp-Life</button>
       <button onclick="showPage('currentSMU')">Current SMU</button>
     </nav>
   </header>
 
   <main>
-    <!-- Section Comp Life -->
+    <!-- Comp-Life Page -->
     <section id="compLife" class="page">
       <h2>📊 Component Life</h2>
-      <p>Halaman untuk melihat data Component Life.</p>
+      
+      <!-- Filter -->
+      <div class="filters">
+        <select id="filterEquip"><option>Equip</option></select>
+        <select id="filterModel"><option>Model</option></select>
+        <select id="filterComponent"><option>Component</option></select>
+        <button onclick="applyFilter()">Filter</button>
+      </div>
+
+      <!-- Tambah Baris -->
+      <div class="form-add">
+        <input type="text" placeholder="Equip">
+        <input type="text" placeholder="Model">
+        <input type="text" placeholder="Component">
+        <input type="number" placeholder="Freq">
+        <input type="number" placeholder="Cost">
+        <input type="date" placeholder="Change Out">
+        <input type="date" placeholder="Next Change">
+        <input type="number" placeholder="SMU">
+        <input type="number" placeholder="Life">
+        <input type="number" placeholder="%">
+        <button>+ Tambah</button>
+      </div>
+
+      <!-- Tabel -->
+      <table>
+        <thead>
+          <tr>
+            <th>Equip</th>
+            <th>Model</th>
+            <th>Component</th>
+            <th>Freq</th>
+            <th>Cost</th>
+            <th>Change Out</th>
+            <th>Next Change</th>
+            <th>SMU</th>
+            <th>Life</th>
+            <th>%</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="compTable">
+          <tr>
+            <td>CO4421</td>
+            <td>777</td>
+            <td>Engine</td>
+            <td>5000</td>
+            <td>$12,000</td>
+            <td>2025-06-10</td>
+            <td>2025-12-10</td>
+            <td>3245</td>
+            <td>4800</td>
+            <td>68%</td>
+            <td><button>Edit</button></td>
+          </tr>
+        </tbody>
+      </table>
     </section>
 
-    <!-- Section Current SMU -->
+    <!-- Current SMU Page -->
     <section id="currentSMU" class="page hidden">
       <h2>⏱️ Current SMU</h2>
-      <p>Halaman untuk melihat data jam (SMU) unit.</p>
+      <p>Update SMU secara massal:</p>
+      <div class="form-update">
+        <textarea placeholder="Masukkan data (Equip, SMU) baris per baris"></textarea>
+        <button>Update</button>
+      </div>
     </section>
   </main>
 
   <script src="script.js"></script>
 </body>
 </html>
-
