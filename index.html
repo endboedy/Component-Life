@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Component Life</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>⚙️ Component Life</h1>
+    <nav>
+      <button onclick="showPage('compLife')">Comp_Life</button>
+      <button onclick="showPage('currentSMU')">Current SMU</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Section Comp Life -->
+    <section id="compLife" class="page">
+      <h2>📊 Component Life</h2>
+      <p>Halaman untuk melihat data Component Life.</p>
+    </section>
+
+    <!-- Section Current SMU -->
+    <section id="currentSMU" class="page hidden">
+      <h2>⏱️ Current SMU</h2>
+      <p>Halaman untuk melihat data jam (SMU) unit.</p>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
