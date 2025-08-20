@@ -103,11 +103,33 @@ function addRowToTable(data) {
     .insertAdjacentHTML("beforeend", row);
 }
 
-// load data dari Firestore saat awal
+// --- Load Data from Firestore ---
 async function loadData() {
-  const querySnapshot = await getDocs(collection(db, "component_life"));
-  querySnapshot.forEach((docSnap) => {
-    addRowToTable({ id: docSnap.id, ...docSnap.data() });
+  const tableBody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+  tableBody.innerHTML = ""; // clear
+
+  const snapshot = await getDocs(collection(db, "components"));
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const row = tableBody.insertRow();
+    row.innerHTML = `
+      <td>${data.equip ?? ""}</td>
+      <td>${data.model ?? ""}</td>
+      <td>${data.component ?? ""}</td>
+      <td>${data.freq ?? ""}</td>
+      <td>${data.cost ?? ""}</td>
+      <td>${data.changeOut ?? ""}</td>
+      <td>${data.nextChange ?? ""}</td>
+      <td class="current-smu">${data.currentSMU ?? ""}</td>
+      <td class="life">${data.life ?? ""}</td>
+      <td class="lifePct">${data.lifePct ?? ""}%</td>
+      <td>${data.rating ?? ""}</td>
+      <td>${data.remarks ?? ""}</td>
+      <td>${data.foto ? <img src="${data.foto}" width="50" alt="foto"> : ""}</td>
+      <td>
+        <span class="action-btn" onclick="deleteRow('${docSnap.id}')">Delete</span>
+      </td>
+    `;
   });
 }
 loadData();
@@ -133,5 +155,6 @@ window.deleteRow = async function(id) {
 window.editRow = function(id) {
   alert("Edit fungsi untuk ID: " + id + " masih dalam pengembangan");
 };
+
 
 
