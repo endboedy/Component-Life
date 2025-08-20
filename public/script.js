@@ -1,8 +1,10 @@
 // --- Firebase Import ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+import { 
+  getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc 
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-// === Firebase Config (ganti dengan punyamu dari console Firebase) ===
+// === Firebase Config (ganti sesuai project kamu) ===
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -16,22 +18,70 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// --- Switch Menu ---
-window.showPage = function(pageId) {
-  document.querySelectorAll(".page").forEach(p => p.style.display = "none");
-  document.getElementById(pageId).style.display = "block";
-};
+// === DOM Element ===
+const addNewBtn = document.getElementById("addNewBtn");
+const formContainer = document.getElementById("formContainer");
+const saveBtn = document.getElementById("saveBtn");
+const cancelBtn = document.getElementById("cancelBtn");
+const dataTable = document.getElementById("dataTable");
 
-// --- Load Data from Firestore ---
-async function loadData() {
-  const tableBody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
-  tableBody.innerHTML = ""; // clear dulu
+// tampilkan form
+addNewBtn.addEventListener("click", () => {
+  formContainer.classList.remove("hidden");
+});
 
-  const snapshot = await getDocs(collection(db, "components"));
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const row = tableBody.insertRow();
-    row.innerHTML = `
+// cancel form
+cancelBtn.addEventListener("click", () => {
+  formContainer.classList.add("hidden");
+});
+
+// save data
+saveBtn.addEventListener("click", async () => {
+  let equip = document.getElementById("equip").value;
+  let model = document.getElementById("model").value;
+  let component = document.getElementById("component").value;
+  let freq = parseInt(document.getElementById("freq").value) || 0;
+  let cost = parseFloat(document.getElementById("cost").value) || 0;
+  let changeOut = parseInt(document.getElementById("changeOut").value) || 0;
+  let rating = document.getElementById("rating").value;
+  let remarks = document.getElementById("remarks").value;
+  let fotoFile = document.getElementById("foto").files[0];
+
+  let currentSMU = 0; // default nanti di-update dari menu Current SMU
+  let nextChange = changeOut + freq;
+  let life = currentSMU - changeOut;
+  let lifePercent = freq > 0 ? ((life / freq) * 100).toFixed(2) : 0;
+
+  // simpan ke Firestore
+  try {
+    const docRef = await addDoc(collection(db, "component_life"), {
+      equip, model, component, freq, cost, changeOut, 
+      rating, remarks, fotoName: fotoFile ? fotoFile.name : "",
+      currentSMU, nextChange, life, lifePercent
+    });
+
+    console.log("Data tersimpan dengan ID:", docRef.id);
+
+    // tampilkan di tabel
+    addRowToTable({ 
+      id: docRef.id, equip, model, component, freq, cost, 
+      changeOut, rating, remarks, fotoName: fotoFile ? fotoFile.name : "",
+      currentSMU, nextChange, life, lifePercent 
+    });
+
+    // reset form
+    formContainer.classList.add("hidden");
+    document.querySelectorAll("#formContainer input, #formContainer select").forEach(el => el.value = "");
+
+  } catch (e) {
+    console.error("Error saat simpan:", e);
+  }
+});
+
+// fungsi render row ke tabel
+function addRowToTable(data) {
+  let row = `
+    <tr id="row-${data.id}">
       <td>${data.equip}</td>
       <td>${data.model}</td>
       <td>${data.component}</td>
@@ -39,73 +89,39 @@ async function loadData() {
       <td>${data.cost}</td>
       <td>${data.changeOut}</td>
       <td>${data.nextChange}</td>
-      <td class="current-smu">${data.currentSMU}</td>
-      <td class="life">${data.life}</td>
-      <td class="lifePct">${data.lifePct}%</td>
+      <td>${data.currentSMU}</td>
+      <td>${data.life}</td>
+      <td>${data.lifePercent}%</td>
       <td>${data.rating}</td>
       <td>${data.remarks}</td>
-      <td>${data.foto ? <img src="${data.foto}" width="50"> : ""}</td>
+      <td>${data.fotoName}</td>
       <td>
-        <span class="action-btn" onclick="deleteRow('${docSnap.id}')">Delete</span>
+        <button onclick="editRow('${data.id}')">Edit</button>
+        <button onclick="deleteRow('${data.id}')">Delete</button>
       </td>
-    `;
+    </tr>
+  `;
+  dataTable.insertAdjacentHTML("beforeend", row);
+}
+
+// load data dari Firestore saat awal
+async function loadData() {
+  const querySnapshot = await getDocs(collection(db, "component_life"));
+  querySnapshot.forEach((docSnap) => {
+    addRowToTable({ id: docSnap.id, ...docSnap.data() });
   });
 }
 loadData();
 
-// --- Add New Row ---
-window.addRow = async function() {
-  const equip = document.getElementById('equip').value;
-  const model = document.getElementById('model').value;
-  const component = document.getElementById('component').value;
-  const freq = parseInt(document.getElementById('freq').value) || 0;
-  const cost = parseFloat(document.getElementById('cost').value) || 0;
-  const changeOut = parseInt(document.getElementById('changeOut').value) || 0;
-  const rating = document.getElementById('rating').value;
-  const remarks = document.getElementById('remarks').value;
-
-  const nextChange = changeOut + freq;
-  const currentSMU = 0;
-  const life = currentSMU - changeOut;
-  const lifePct = freq ? ((life / freq) * 100).toFixed(2) : 0;
-
-  await addDoc(collection(db, "components"), {
-    equip, model, component, freq, cost, changeOut,
-    nextChange, currentSMU, life, lifePct, rating, remarks
-  });
-
-  alert("Data saved!");
-  loadData();
-};
-
-// --- Update Current SMU ---
-window.updateSMU = async function() {
-  const equipKey = document.getElementById("updateEquip").value;
-  const newSMU = parseInt(document.getElementById("updateSMUValue").value) || 0;
-
-  const q = query(collection(db, "components"), where("equip", "==", equipKey));
-  const snapshot = await getDocs(q);
-
-  snapshot.forEach(async (docSnap) => {
-    const data = docSnap.data();
-    const life = newSMU - data.changeOut;
-    const lifePct = data.freq ? ((life / data.freq) * 100).toFixed(2) : 0;
-
-    await updateDoc(doc(db, "components", docSnap.id), {
-      currentSMU: newSMU,
-      life: life,
-      lifePct: lifePct
-    });
-  });
-
-  alert("SMU updated!");
-  loadData();
-};
-
-// --- Delete Row ---
+// fungsi delete
 window.deleteRow = async function(id) {
-  await deleteDoc(doc(db, "components", id));
-  alert("Data deleted!");
-  loadData();
+  if (confirm("Yakin hapus data ini?")) {
+    await deleteDoc(doc(db, "component_life", id));
+    document.getElementById(row-${id}).remove();
+  }
 };
 
+// fungsi edit (basic, nanti bisa dikembangkan)
+window.editRow = function(id) {
+  alert("Edit fungsi untuk ID: " + id + " masih dalam pengembangan");
+};
