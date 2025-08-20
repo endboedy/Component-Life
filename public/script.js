@@ -81,20 +81,23 @@ saveBtn.addEventListener("click", async () => {
 function addRowToTable(data) {
   let row = `
     <tr id="row-${data.id}">
-      <td>${data.equip}</td>
-      <td>${data.model}</td>
-      <td>${data.component}</td>
-      <td>${data.freq}</td>
-      <td>${data.cost}</td>
-      <td>${data.changeOut}</td>
-      <td>${data.nextChange}</td>
-      <td class="current-smu">${data.currentSMU}</td>
-      <td class="life">${data.life}</td>
-      <td class="lifePct">${data.lifePercent}%</td>
-      <td>${data.rating}</td>
-      <td>${data.remarks}</td>
-      <td>${data.foto ? <img src="${data.foto}" width="50"> : ""}</td>
-      <td>
+       <td>${data.equip}</td>
+  <td>${data.model}</td>
+  <td>${data.component}</td>
+  <td>${data.freq}</td>
+  <td>${data.cost}</td>
+  <td>${data.changeOut}</td>
+  <td>${data.nextChange}</td>
+  <td class="current-smu">${data.currentSMU}</td>
+  <td class="life">${data.life}</td>
+  <td class="lifePct">${data.lifePct}%</td>
+  <td>${data.rating}</td>
+  <td>${data.remarks}</td>
+  <td>${data.foto ? <img src="${data.foto}" width="50"> : ""}</td>
+  <td>
+    <span class="action-btn" onclick="deleteRow('${docSnap.id}')">Delete</span>
+  </td>
+`;
         <span class="action-btn" onclick="deleteRow('${data.id}')">Delete</span>
         <span class="action-btn" onclick="editRow('${data.id}')">Edit</span>
       </td>
@@ -127,3 +130,4 @@ window.deleteRow = async function(id) {
 window.editRow = function(id) {
   alert("Edit fungsi untuk ID: " + id + " masih dalam pengembangan");
 };
+
