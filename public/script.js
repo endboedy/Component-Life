@@ -64,8 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const col = db ? db.collection('components') : null;  
 
   // ===== Helpers =====
-const fmtMoney = v => (v != null) ? ${Number(v).toLocaleString()} : '-';
-const esc = s => (s != null) ? String(s).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>') : '';  
+const fmtMoney = v => (v != null) ? `${Number(v).toLocaleString()}` : '-';
+const esc = s => (s != null)
+  ? String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+  : '';
 
   const pctBadge = (pct) => {  
     if (pct == null || isNaN(pct)) return '-';  
@@ -300,6 +305,7 @@ const esc = s => (s != null) ? String(s).replace(/&/g, '&').replace(/</g, '<').r
   }
 
 });
+
 
 
 
