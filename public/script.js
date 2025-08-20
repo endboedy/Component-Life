@@ -1,12 +1,9 @@
-// ----- Firebase ESM imports (v12) -----
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, doc, setDoc, updateDoc, deleteDoc,
-  onSnapshot, getDocs, query
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-import {
-  getStorage, ref, uploadBytes, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
+<!-- Firebase SDK -->
+<script type="module">
+  // Import dari CDN
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 // 🔥 Firebase Config (punyamu)
 const firebaseConfig = {
@@ -336,3 +333,4 @@ async function saveSMUMass() {
   }
   alert("SMU updated.");
 }
+
