@@ -1,67 +1,106 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-<script>
-  const currentSMU = { "EX1001": 5000, "EX1002": 6200 }; // Contoh data dari tab Update Current SMU
+// 🔥 Firebase Config (ganti sesuai project kamu)
+const firebaseConfig = {
+  apiKey: "...",
+  authDomain: "...",
+  projectId: "...",
+  storageBucket: "...",
+  messagingSenderId: "...",
+  appId: "..."
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-  function openForm() {
-    document.querySelector('.overlay').style.display = 'block';
-    document.querySelector('.form-popup').style.display = 'block';
-  }
+const compRef = collection(db, "components");
+const smuRef = collection(db, "current_smu");
 
-  function closeForm() {
-    document.querySelector('.overlay').style.display = 'none';
-    document.querySelector('.form-popup').style.display = 'none';
-  }
+const tbody = document.querySelector("#compTable tbody");
+const addNewBtn = document.getElementById("addNewBtn");
+const modal = document.getElementById("modal");
+const addForm = document.getElementById("addForm");
+const closeModal = document.getElementById("closeModal");
+const smuForm = document.getElementById("smuForm");
+const smuList = document.getElementById("smuList");
 
-  document.getElementById('addForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const form = e.target;
-    const equip = form.equip.value;
-    const model = form.model.value;
-    const component = form.component.value;
-    const freq = parseFloat(form.freq.value);
-    const cost = parseFloat(form.cost.value);
-    const changeOut = parseFloat(form.changeOut.value);
-    const rating = form.rating.value;
-    const remarks = form.remarks.value;
-    const foto = form.foto.files[0]?.name || '';
-
-    const current = currentSMU[equip] || 0;
-    const nextChange = changeOut + freq;
-    const life = current - changeOut;
-    const lifePercent = ((life / freq) * 100).toFixed(1);
-
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${equip}</td><td>${model}</td><td>${component}</td><td>${freq}</td><td>${cost}</td><td>${changeOut}</td>
-      <td>${nextChange}</td><td>${current}</td><td>${life}</td><td>${lifePercent}%</td><td>${rating}</td><td>${remarks}</td>
-      <td>${foto}</td>
-      <td>
-        <button class="btn btn-sm btn-warning" onclick="editRow(this)">Edit</button>
-        <button class="btn btn-sm btn-success" onclick="saveRow(this)">Save</button>
-      </td>
-    `;
-    document.getElementById('dataTable').appendChild(row);
-    closeForm();
-    form.reset();
+// Tab switching
+document.querySelectorAll(".tab-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
+    document.getElementById(btn.dataset.tab).classList.add("active");
   });
+});
 
-  function editRow(btn) {
-    const row = btn.closest('tr');
-    [...row.children].forEach((cell, i) => {
-      if (i < 13) {
-        const val = cell.innerText;
-        cell.innerHTML = `<input class="form-control form-control-sm" value="${val.replace('%','')}" />`;
-      }
-    });
-  }
+// Modal open/close
+addNewBtn.onclick = ()=> modal.classList.remove("hidden");
+closeModal.onclick = ()=> modal.classList.add("hidden");
 
-  function saveRow(btn) {
-    const row = btn.closest('tr');
-    [...row.children].forEach((cell, i) => {
-      if (i < 13) {
-        const input = cell.querySelector('input');
-        if (input) cell.innerText = i === 9 ? `${input.value}%` : input.value;
-      }
-    });
+// Add new component
+addForm.onsubmit = async (e)=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(addForm));
+  let fileUrl = "";
+  if(data.file && data.file.size > 0){
+    const storageRef = ref(storage, "uploads/"+data.file.name);
+    await uploadBytes(storageRef, data.file);
+    fileUrl = await getDownloadURL(storageRef);
   }
-</script>
+  await addDoc(compRef, {
+    equipment: data.equipment,
+    model: data.model,
+    component: data.component,
+    freq: Number(data.freq),
+    cost: Number(data.cost),
+    changeOut: Number(data.changeOut),
+    rating: data.rating || "",
+    remarks: data.remarks || "",
+    file: fileUrl
+  });
+  addForm.reset();
+  modal.classList.add("hidden");
+};
+
+// Live table
+onSnapshot(compRef, (snapshot)=>{
+  tbody.innerHTML = "";
+  snapshot.forEach(docSnap=>{
+    const d = docSnap.data();
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td contenteditable>${d.equipment}</td>
+      <td contenteditable>${d.model}</td>
+      <td contenteditable>${d.component}</td>
+      <td contenteditable>${d.freq}</td>
+      <td contenteditable>${d.cost}</td>
+      <td contenteditable>${d.changeOut}</td>
+      <td contenteditable>${d.rating}</td>
+      <td contenteditable>${d.remarks}</td>
+      <td>${d.file ? `<a href="${d.file}" target="_blank">View</a>` : ""}</td>
+      <td></td><td></td><td></td><td></td>
+    `;
+    tbody.appendChild(tr);
+  });
+});
+
+// Update SMU
+smuForm.onsubmit = async (e)=>{
+  e.preventDefault();
+  const eq = document.getElementById("smuEquip").value;
+  const val = Number(document.getElementById("smuValue").value);
+  await addDoc(smuRef, { equipment: eq, smu: val, updated: Date.now() });
+  smuForm.reset();
+};
+onSnapshot(smuRef, (snap)=>{
+  smuList.innerHTML = "";
+  snap.forEach(docSnap=>{
+    const d = docSnap.data();
+    const li = document.createElement("li");
+    li.textContent = `${d.equipment}: ${d.smu}`;
+    smuList.appendChild(li);
+  });
+});
