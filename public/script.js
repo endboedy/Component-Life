@@ -56,12 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const col = db.collection('components');
 
   // ===== Helpers =====
-  const fmtMoney = v => v != null ? `$${Number(v).toLocaleString()}` : '-';
+  const fmtMoney = v => v != null ? $${Number(v).toLocaleString()} : '-';
   const pctBadge = (pct) => {
     if (pct == null || isNaN(pct)) return '-';
-    if (pct < 60) return `<span class="badge ok">${pct}%</span>`;
-    if (pct < 85) return `<span class="badge warn">${pct}%</span>`;
-    return `<span class="badge danger">${pct}%</span>`;
+    if (pct < 60) return <span class="badge ok">${pct}%</span>;
+    if (pct < 85) return <span class="badge warn">${pct}%</span>;
+    return <span class="badge danger">${pct}%</span>;
   };
 
   function numOrNull(v) {
@@ -70,7 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function esc(s) {
-    return String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    return String(s || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;');
   }
 
   // ===== Fetch Firestore =====
@@ -86,50 +89,61 @@ document.addEventListener('DOMContentLoaded', () => {
     const models = uniq(rows.map(r => r.model));
     const comps = uniq(rows.map(r => r.component));
     [filterEquip, filterModel, filterComponent].forEach(sel => sel.length = 1);
-    equips.forEach(v => filterEquip.insertAdjacentHTML('beforeend', `<option>${v}</option>`));
-    models.forEach(v => filterModel.insertAdjacentHTML('beforeend', `<option>${v}</option>`));
-    comps.forEach(v => filterComponent.insertAdjacentHTML('beforeend', `<option>${v}</option>`));
+    equips.forEach(v => filterEquip.insertAdjacentHTML('beforeend', <option>${v}</option>));
+    models.forEach(v => filterModel.insertAdjacentHTML('beforeend', <option>${v}</option>));
+    comps.forEach(v => filterComponent.insertAdjacentHTML('beforeend', <option>${v}</option>));
   }
 
   function applyFilter(rows) {
     const e = filterEquip.value,
-      m = filterModel.value,
-      c = filterComponent.value;
-    return rows.filter(r => (!e || r.equip === e) && (!m || r.model === m) && (!c ||
-                                                                               
-  // ===== Table render =====
-function renderTable() {
-  const rows = applyFilter(allDocs);
-  tbody.innerHTML = rows.map(r => rowHtml(r)).join('');
-  attachRowEvents();
-}
+          m = filterModel.value,
+          c = filterComponent.value;
+    return rows.filter(r =>
+      (!e || r.equip === e) &&
+      (!m || r.model === m) &&
+      (!c || r.component === c)
+    );
+  }
 
-function rowHtml(r) {
-  const nextChange = computeNextChange(r);
-  const life = computeLife(r);
-  const pct = computePct(life, r.freq);
-  const rating = r.rating ? '⭐'.repeat(r.rating) : '-';
-  const pic = r.pictureUrl ? `<a href="${r.pictureUrl}" target="_blank"><img class="thumb" src="${r.pictureUrl}"/></a>` : '-';
-  return `<tr data-id="${r.id}">
-    <td>${esc(r.equip)}</td>
-    <td>${esc(r.model)}</td>
-    <td>${esc(r.component)}</td>
-    <td>${r.freq || ''}</td>
-    <td>${fmtMoney(r.cost)}</td>
-    <td>${r.changeOut || ''}</td>
-    <td>${nextChange || ''}</td>
-    <td>${r.smu || ''}</td>
-    <td>${life || ''}</td>
-    <td>${pctBadge(pct)}</td>
-    <td>${rating}</td>
-    <td title="${esc(r.remarks)}">${esc(r.remarks).slice(0, 18)}${(r.remarks || '').length > 18 ? '…' : ''}</td>
-    <td>${pic}</td>
-    <td>
-      <button class="action-btn edit">✏️</button>
-      <button class="action-btn del">🗑️</button>
-    </td>
-  </tr>`;
-}
+  // ===== Table render =====
+  function renderTable(){
+    const rows = applyFilter(allDocs);
+    tbody.innerHTML = rows.map(r=>rowHtml(r)).join('');
+    attachRowEvents();
+  }
+
+  function rowHtml(r){
+    const nextChange = computeNextChange(r);
+    const life = computeLife(r);
+    const pct = computePct(life,r.freq);
+    const rating = (typeof r.rating === 'number' && r.rating > 0) ? '⭐'.repeat(r.rating) : '-';
+    const pic = r.pictureUrl ? <a href="${r.pictureUrl}" target="_blank"><img class="thumb" src="${r.pictureUrl}"/></a> : '-';
+    const remarks = r.remarks || "";
+    return `<tr data-id="${r.id}">
+      <td>${esc(r.equip)}</td>
+      <td>${esc(r.model)}</td>
+      <td>${esc(r.component)}</td>
+      <td>${r.freq||''}</td>
+      <td>${fmtMoney(r.cost)}</td>
+      <td>${r.changeOut||''}</td>
+      <td>${nextChange||''}</td>
+      <td>${r.smu||''}</td>
+      <td>${life||''}</td>
+      <td>${pctBadge(pct)}</td>
+      <td>${rating}</td>
+      <td title="${esc(remarks)}">${esc(remarks).slice(0,18)}${remarks.length>18?'…':''}</td>
+      <td>${pic}</td>
+      <td>
+        <button class="action-btn edit">✏️</button>
+        <button class="action-btn del">🗑️</button>
+      </td>
+    </tr>`;
+  }
+
+  function attachRowEvents(){
+    tbody.querySelectorAll('.edit').forEach(btn=>btn.addEventListener('click', onEdit));
+    tbody.querySelectorAll('.del').forEach(btn=>btn.addEventListener('click', onDelete));
+  }
 
   // ===== Computation =====
   function computeNextChange(r){
@@ -141,7 +155,8 @@ function rowHtml(r) {
 
   function computeLife(r){
     if(!r.smu || !r.changeOut) return null;
-    return Number(r.smu) - new Date(r.changeOut).getTime()/86400000;
+    const daysSinceChange = Math.floor((Date.now() - new Date(r.changeOut)) / 86400000);
+    return Number(r.smu) - daysSinceChange;
   }
 
   function computePct(life,freq){
@@ -170,7 +185,10 @@ function rowHtml(r) {
     const freq = Number(inputs.freq.value) || 0;
     const changeOut = inputs.changeOut.value ? new Date(inputs.changeOut.value) : null;
     let life = smu;
-    if(changeOut) life = smu - changeOut.getDate();
+    if(changeOut){
+      const daysSinceChange = Math.floor((Date.now() - changeOut) / 86400000);
+      life = smu - daysSinceChange;
+    }
     inputs.life.value = life;
     inputs.pct.value = freq>0 ? Math.round(life/freq*100) : 0;
   }
@@ -197,7 +215,7 @@ function rowHtml(r) {
       const docRef = doc(db,'components',editId);
       const file = inputs.picture.files[0];
       if(file){
-        const r = ref(storage, `pictures/${editId}/${file.name}`);
+        const r = ref(storage, pictures/${editId}/${file.name});
         await uploadBytes(r,file);
         payload.pictureUrl = await getDownloadURL(r);
       }
@@ -206,7 +224,7 @@ function rowHtml(r) {
       const docRef = await addDoc(col,payload);
       const file = inputs.picture.files[0];
       if(file){
-        const r = ref(storage, `pictures/${docRef.id}/${file.name}`);
+        const r = ref(storage, pictures/${docRef.id}/${file.name});
         await uploadBytes(r,file);
         await updateDoc(doc(db,'components',docRef.id),{pictureUrl:await getDownloadURL(r)});
       }
@@ -268,9 +286,3 @@ function rowHtml(r) {
   });
 
 });
-
-
-
-
-
-
