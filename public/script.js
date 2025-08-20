@@ -1,89 +1,93 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // ===== Tabs =====
-  const tabs = document.querySelectorAll('.tab-btn');
-  const pages = document.querySelectorAll('.tab-page');
-  tabs.forEach(btn => btn.addEventListener('click', () => {
-    tabs.forEach(b => b.classList.remove('active'));
-    pages.forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab).classList.add('active');
-  }));
+document.addEventListener('DOMContentLoaded', () => {  
+  // ===== Tabs =====  
+  const tabs = document.querySelectorAll('.tab-btn');  
+  const pages = document.querySelectorAll('.tab-page');  
+  tabs.forEach(btn => btn.addEventListener('click', () => {  
+    tabs.forEach(b => b.classList.remove('active'));  
+    pages.forEach(p => p.classList.remove('active'));  
+    btn.classList.add('active');  
+    document.getElementById(btn.dataset.tab).classList.add('active');  
+  }));  
 
-  // ===== Firebase config =====
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "component-life.firebaseapp.com",
-    projectId: "component-life",
-    storageBucket: "component-life.appspot.com",
-    messagingSenderId: "",
-    appId: ""
-  };
+  // ===== Firebase config =====  
+  const firebaseConfig = {  
+    apiKey: "YOUR_API_KEY",  
+    authDomain: "component-life.firebaseapp.com",  
+    projectId: "component-life",  
+    storageBucket: "component-life.appspot.com",  
+    messagingSenderId: "",  
+    appId: ""  
+  };  
 
-  // Initialize Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore(app);
-  const storage = firebase.storage(app);
+  // Initialize Firebase if SDK loaded  
+  let app, db, storage;  
+  if (typeof firebase !== 'undefined') {  
+    if (!firebase.apps || firebase.apps.length === 0) {  
+      firebase.initializeApp(firebaseConfig);  
+    }  
+    app = firebase.app();  
+    db = firebase.firestore(app);  
+    storage = firebase.storage(app);  
+  } else {  
+    console.error('Firebase SDK not loaded. Include firebase-app.js (and firestore/storage jika diperlukan) before this script.');  
+  }  
 
-  // ===== DOM Refs =====
-  const tbody = document.getElementById('compTbody');
-  const filterEquip = document.getElementById('filterEquip');
-  const filterModel = document.getElementById('filterModel');
-  const filterComponent = document.getElementById('filterComponent');
-  const btnApplyFilter = document.getElementById('btnApplyFilter');
-  const btnClearFilter = document.getElementById('btnClearFilter');
-  const btnAddNew = document.getElementById('btnAddNew');
-  const modal = document.getElementById('modalForm');
-  const spanClose = modal.querySelector('.close');
-  const form = document.getElementById('componentForm');
-  const modalTitle = document.getElementById('modalTitle');
-  const inputs = {
-    equip: document.getElementById('formEquip'),
-    model: document.getElementById('formModel'),
-    component: document.getElementById('formComponent'),
-    freq: document.getElementById('formFreq'),
-    cost: document.getElementById('formCost'),
-    changeOut: document.getElementById('formChangeOut'),
-    smu: document.getElementById('formSMU'),
-    life: document.getElementById('formLife'),
-    pct: document.getElementById('formPct'),
-    rating: document.getElementById('formRating'),
-    remarks: document.getElementById('formRemarks'),
-    picture: document.getElementById('formPicture')
-  };
+  // ===== DOM Refs =====  
+  const tbody = document.getElementById('compTbody');  
+  const filterEquip = document.getElementById('filterEquip');  
+  const filterModel = document.getElementById('filterModel');  
+  const filterComponent = document.getElementById('filterComponent');  
+  const btnApplyFilter = document.getElementById('btnApplyFilter');  
+  const btnClearFilter = document.getElementById('btnClearFilter');  
+  const btnAddNew = document.getElementById('btnAddNew');  
+  const modal = document.getElementById('modalForm');  
+  const spanClose = modal.querySelector('.close');  
+  const form = document.getElementById('componentForm');  
+  const modalTitle = document.getElementById('modalTitle');  
+  const inputs = {  
+    equip: document.getElementById('formEquip'),  
+    model: document.getElementById('formModel'),  
+    component: document.getElementById('formComponent'),  
+    freq: document.getElementById('formFreq'),  
+    cost: document.getElementById('formCost'),  
+    changeOut: document.getElementById('formChangeOut'),  
+    smu: document.getElementById('formSMU'),  
+    life: document.getElementById('formLife'),  
+    pct: document.getElementById('formPct'),  
+    rating: document.getElementById('formRating'),  
+    remarks: document.getElementById('formRemarks'),  
+    picture: document.getElementById('formPicture')  
+  };  
 
-  let editId = null;
-  let allDocs = [];
-  const col = db.collection('components');
+  let editId = null;  
+  let allDocs = [];  
+  const col = db ? db.collection('components') : null;  
 
- // ===== Helpers =====
-const fmtMoney = v => (v != null) ? `${Number(v).toLocaleString()}` : '-';
+  // ===== Helpers =====  
+  const fmtMoney = v => (v != null) ? `${Number(v).toLocaleString()}` : '-';  
 
-const pctBadge = (pct) => {
-  if (pct == null || isNaN(pct)) return '-';
-  if (pct < 60) return `<span class="badge ok">${pct}%</span>`;
-  if (pct < 85) return `<span class="badge warn">${pct}%</span>`;
-  return `<span class="badge danger">${pct}%</span>`;
-};
+  const pctBadge = (pct) => {  
+    if (pct == null || isNaN(pct)) return '-';  
+    if (pct < 60) return `<span class="badge ok">${pct}%</span>`;  
+    if (pct < 85) return `<span class="badge warn">${pct}%</span>`;  
+    return `<span class="badge danger">${pct}%</span>`;  
+  };  
 
-// Contoh pemakaian:
-// Misalnya kamu punya data objek
-// const data = { value: 12345, pct: 72 };
+  // Contoh render contoh (opsional)  
+  function renderExample(data) {  
+    const moneyEl = document.getElementById('money');  
+    const pctEl = document.getElementById('pct');  
+    if (moneyEl) moneyEl.textContent = fmtMoney(data?.value);  
+    if (pctEl) pctEl.innerHTML = pctBadge(data?.pct);  
+  }  
 
-// Contoh render ke DOM jika ada elemen placeholder
-function renderExample(data) {
-  const moneyEl = document.getElementById('money');
-  const pctEl = document.getElementById('pct');
+  // If firebase not ready, skip Firestore related setups  
+  let colListenerActive = false;  
 
-  if (moneyEl) moneyEl.textContent = fmtMoney(data?.value);
-  if (pctEl) pctEl.innerHTML = pctBadge(data?.pct);
-}
-
-// Jika tidak ada DOM saat load, tetap definisikan fungsi untuk dipakai di tempat lain
-if (typeof window !== 'undefined') {
-  // Contoh inisialisasi dengan data dummy (hapus jika sudah ada)
-  // renderExample({ value: 1234567, pct: 42 });
-}
-
+  // ===== Fetch Firestore =====  
+  if (db && col) {  
+    col.orderBy('equip').onSnapshot(snap => {  
+      allDocs = snap.docs.map(d => ({ id
   // ===== Fetch Firestore =====
   col.orderBy('equip').onSnapshot(snap => {
     allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -302,5 +306,6 @@ if (typeof window !== 'undefined') {
   }
 
 });
+
 
 
