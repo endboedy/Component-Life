@@ -103,17 +103,26 @@ document.querySelector("#add-new").addEventListener("click", async () => {
 });
 
 // =========================
-// Upload Gambar (contoh input file #upload)
+// Upload Gambar / PDF per-row
 // =========================
-document.querySelector("#upload").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+document.addEventListener("change", async (e) => {
+  if (e.target && e.target.classList.contains("upload-input")) {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  const storageRef = ref(storage, "images/" + file.name);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
+    const rowId = e.target.dataset.id; // ambil ID row
+    const storageRef = ref(storage, `uploads/${rowId}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
 
-  alert("Upload berhasil ✅ URL: " + url);
+    // simpan link ke firestore
+    await updateDoc(doc(db, "components", rowId), {
+      pictureUrl: url,
+    });
+
+    alert("Upload berhasil ✅");
+    loadData(); // refresh tabel
+  }
 });
 
 // =========================
@@ -133,6 +142,7 @@ document.querySelector("#filter-input").addEventListener("input", async (e) => {
 // Start Render
 // =========================
 loadData();
+
 
 
 
