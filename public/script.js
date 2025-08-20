@@ -87,24 +87,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===== Fetch Firestore =====  
   if (db && col) {  
     col.orderBy('equip').onSnapshot(snap => {  
-      allDocs = snap.docs.map(d => ({ id
-  // ===== Fetch Firestore =====
-  col.orderBy('equip').onSnapshot(snap => {
-    allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    populateFilters(allDocs);
-    renderTable();
-  });
+      allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));  
+      populateFilters(allDocs);  
+      renderTable();  
+    });  
+  }  
 
-  function populateFilters(rows) {
-    const uniq = arr => Array.from(new Set(arr.filter(Boolean)));
-    const equips = uniq(rows.map(r => r.equip));
-    const models = uniq(rows.map(r => r.model));
-    const comps = uniq(rows.map(r => r.component));
-    [filterEquip, filterModel, filterComponent].forEach(sel => sel.length = 1);
-    equips.forEach(v => filterEquip.insertAdjacentHTML('beforeend', `<option>${v}</option>`));
-    models.forEach(v => filterModel.insertAdjacentHTML('beforeend', `<option>${v}</option>`));
-    comps.forEach(v => filterComponent.insertAdjacentHTML('beforeend', `<option>${v}</option>`));
-  }
+  function populateFilters(rows) {  
+    const uniq = arr => Array.from(new Set(arr.filter(Boolean)));  
+    const equips = uniq(rows.map(r => r.equip));  
+    const models = uniq(rows.map(r => r.model));  
+    const comps = uniq(rows.map(r =>
 
   function applyFilter(rows) {
     const e = filterEquip.value,
@@ -306,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+
 
 
 
