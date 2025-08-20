@@ -3,70 +3,63 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Component Life EM</title>
+  <title>⚙️ Component Life</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="app-header">
-    <h1>⚙️ Component Life EM</h1>
-    <nav class="tabs">
-      <button class="tab-btn active" data-tab="compLife">Comp-Life</button>
-      <button class="tab-btn" data-tab="updateSMU">Update Current SMU</button>
+    <h1>⚙️ Component Life</h1>
+    <nav class="menu">
+      <button onclick="showSection('compLife')">Comp-Life</button>
+      <button onclick="showSection('currentSMU')">Update Current SMU</button>
     </nav>
   </header>
 
-  <main>
-    <!-- Comp-Life Table -->
-    <section id="compLife" class="tab-content active">
-      <div class="controls">
-        <input id="filterEquip" placeholder="Filter Equipment..." />
-        <input id="filterModel" placeholder="Filter Model..." />
-        <input id="filterComp" placeholder="Filter Component..." />
-        <button id="addNewBtn">+ Add New</button>
-      </div>
-      <table id="compTable">
-        <thead>
-          <tr>
-            <th>Equipment</th><th>Model</th><th>Component</th><th>Freq</th>
-            <th>Cost</th><th>Change Out</th><th>Rating</th><th>Remarks</th>
-            <th>Picture/PDF</th><th>Current SMU</th>
-            <th>Next Change</th><th>Life</th><th>Life %</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
+  <!-- Comp-Life Section -->
+  <section id="compLife" class="section">
+    <table id="compTable">
+      <thead>
+        <tr>
+          <th>Equipment</th>
+          <th>Component</th>
+          <th>Change Out</th>
+          <th>Freq</th>
+          <th>Current SMU</th>
+          <th>Next Change</th>
+          <th>Life</th>
+          <th>Life %</th>
+          <th>Rating</th>
+          <th>Remarks</th>
+          <th>Picture</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="compTableBody">
+        <!-- Data from Firebase -->
+      </tbody>
+    </table>
+    <button id="addNewBtn" onclick="showAddNewForm()">➕ Add New</button>
+    <form id="addNewForm" class="hidden" onsubmit="addNewComponent(event)">
+      <input type="text" id="newEquipment" placeholder="Equipment" required />
+      <input type="text" id="newComponent" placeholder="Component" required />
+      <input type="number" id="newChangeOut" placeholder="Change Out" required />
+      <input type="number" id="newFreq" placeholder="Freq" required />
+      <input type="text" id="newRating" placeholder="Rating" />
+      <input type="text" id="newRemarks" placeholder="Remarks" />
+      <input type="file" id="newPicture" accept=".jpg,.jpeg,.png,.pdf" />
+      <button type="submit">Save</button>
+      <button type="button" onclick="hideAddNewForm()">Cancel</button>
+    </form>
+  </section>
 
-    <!-- Update SMU -->
-    <section id="updateSMU" class="tab-content">
-      <form id="smuForm">
-        <input id="smuEquip" placeholder="Equipment ID" required />
-        <input id="smuValue" type="number" placeholder="Current SMU" required />
-        <button type="submit">Update</button>
-      </form>
-      <ul id="smuList"></ul>
-    </section>
-  </main>
-
-  <!-- Modal Add New -->
-  <div id="modal" class="modal hidden">
-    <div class="modal-content">
-      <h2>Add New Component</h2>
-      <form id="addForm">
-        <input name="equipment" placeholder="Equipment" required />
-        <input name="model" placeholder="Model" required />
-        <input name="component" placeholder="Component" required />
-        <input name="freq" type="number" placeholder="Freq (hrs)" required />
-        <input name="cost" type="number" placeholder="Cost" required />
-        <input name="changeOut" type="number" placeholder="Change Out" required />
-        <input name="rating" placeholder="Rating" />
-        <input name="remarks" placeholder="Remarks" />
-        <input name="file" type="file" accept=".jpg,.jpeg,.png,.pdf" />
-        <button type="submit">Save</button>
-        <button type="button" id="closeModal">Cancel</button>
-      </form>
-    </div>
-  </div>
+  <!-- Update Current SMU Section -->
+  <section id="currentSMU" class="section hidden">
+    <h2>Update Current SMU</h2>
+    <form id="updateSMUForm" onsubmit="updateCurrentSMU(event)">
+      <textarea id="bulkSMU" placeholder="Equipment, Current SMU (per line)" rows="8"></textarea>
+      <button type="submit">Update</button>
+    </form>
+  </section>
 
   <script type="module" src="script.js"></script>
 </body>
