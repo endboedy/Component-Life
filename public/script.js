@@ -81,24 +81,21 @@ saveBtn.addEventListener("click", async () => {
 // fungsi render row ke tabel
 function addRowToTable(data) {
   let row = `
-    <tr id="row-${data.id}">
-      <td>${data.equip}</td>
-      <td>${data.model}</td>
-      <td>${data.component}</td>
-      <td>${data.freq}</td>
-      <td>${data.cost}</td>
-      <td>${data.changeOut}</td>
-      <td>${data.nextChange}</td>
-      <td>${data.currentSMU}</td>
-      <td>${data.life}</td>
-      <td>${data.lifePercent}%</td>
-      <td>${data.rating}</td>
-      <td>${data.remarks}</td>
-      <td>${data.fotoName}</td>
-      <td>
-        <button onclick="editRow('${data.id}')">Edit</button>
-        <button onclick="deleteRow('${data.id}')">Delete</button>
-      </td>
+    row.innerHTML = `
+  <td>${data.equip}</td>
+  <td>${data.model}</td>
+  <td>${data.component}</td>
+  <td>${data.freq}</td>
+  <td>${data.cost}</td>
+  <td>${data.changeOut}</td>
+  <td>${data.nextChange}</td>
+  <td class="current-smu">${data.currentSMU}</td>
+  <td class="life">${data.life}</td>
+  <td class="lifePct">${data.lifePct}%</td>
+  <td>${data.rating}</td>
+  <td>${data.remarks}</td>
+  <td>${data.foto ? <img src="${data.foto}" width="50"> : ""}</td>
+`;
     </tr>
   `;
   dataTable.insertAdjacentHTML("beforeend", row);
@@ -125,3 +122,4 @@ window.deleteRow = async function(id) {
 window.editRow = function(id) {
   alert("Edit fungsi untuk ID: " + id + " masih dalam pengembangan");
 };
+
