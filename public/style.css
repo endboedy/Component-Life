@@ -1,79 +1,99 @@
 body {
   font-family: Arial, sans-serif;
-  background: #f5f7fa;
   margin: 0;
-  padding: 0;
+  background: #f4f7fa;
+  color: #333;
 }
 
 .app-header {
-  background: #2b4c7e;
+  background: #1f3c88;
   color: white;
   padding: 1rem;
   text-align: center;
 }
 
-.tabs {
+.menu {
   margin-top: 1rem;
 }
 
-.tab-btn {
-  margin: 0 .5rem;
-  padding: .5rem 1rem;
+.menu button {
+  background: #fff;
+  color: #1f3c88;
   border: none;
-  border-radius: 6px;
-  background: #ccc;
+  padding: 0.5rem 1rem;
+  margin: 0 0.5rem;
   cursor: pointer;
+  border-radius: 6px;
 }
 
-.tab-btn.active {
-  background: #4a90e2;
-  color: white;
+.menu button:hover {
+  background: #e6ecf5;
 }
 
-main {
+.section {
   padding: 1rem;
 }
 
-.controls {
-  display: flex;
-  gap: .5rem;
-  margin-bottom: 1rem;
+.hidden {
+  display: none;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
-  box-shadow: 0 2px 6px rgba(0,0,0,.1);
+  margin-top: 1rem;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 th, td {
   border: 1px solid #ddd;
-  padding: .5rem;
+  padding: 0.5rem;
   text-align: center;
 }
 
 th {
-  background: #4a90e2;
+  background: #1f3c88;
   color: white;
-  position: sticky;
-  top: 0;
 }
 
-.modal {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,.5);
+tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+#addNewBtn {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #1f3c88;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+#addNewForm {
+  margin-top: 1rem;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.modal.hidden { display: none; }
+#addNewForm input {
+  padding: 0.5rem;
+  flex: 1 1 200px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
 
-.modal-content {
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
-  width: 400px;
+#addNewForm button {
+  padding: 0.5rem 1rem;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+/* 🔴 Conditional formatting */
+.red-bg {
+  background: red !important;
+  color: white !important;
 }
