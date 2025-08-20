@@ -95,50 +95,54 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function applyFilter(rows) {
-    const e = filterEquip.value,
-          m = filterModel.value,
-          c = filterComponent.value;
-    return rows.filter(r =>
-      (!e || r.equip === e) &&
-      (!m || r.model === m) &&
-      (!c || r.component === c)
-    );
-  }
+  const e = filterEquip.value,
+        m = filterModel.value,
+        c = filterComponent.value;
+
+  return rows.filter(r =>
+    (!e || r.equip === e) &&
+    (!m || r.model === m) &&
+    (!c || r.component === c)
+  );
+}
 
   // ===== Table render =====
-  function renderTable(){
-    const rows = applyFilter(allDocs);
-    tbody.innerHTML = rows.map(r=>rowHtml(r)).join('');
-    attachRowEvents();
-  }
+function renderTable() {
+  const rows = applyFilter(allDocs);
+  tbody.innerHTML = rows.map(r => rowHtml(r)).join('');
+  attachRowEvents();
+}
 
-  function rowHtml(r){
-    const nextChange = computeNextChange(r);
-    const life = computeLife(r);
-    const pct = computePct(life,r.freq);
-    const rating = (typeof r.rating === 'number' && r.rating > 0) ? '⭐'.repeat(r.rating) : '-';
-    const pic = r.pictureUrl ? <a href="${r.pictureUrl}" target="_blank"><img class="thumb" src="${r.pictureUrl}"/></a> : '-';
-    const remarks = r.remarks || "";
-    return `<tr data-id="${r.id}">
-      <td>${esc(r.equip)}</td>
-      <td>${esc(r.model)}</td>
-      <td>${esc(r.component)}</td>
-      <td>${r.freq||''}</td>
-      <td>${fmtMoney(r.cost)}</td>
-      <td>${r.changeOut||''}</td>
-      <td>${nextChange||''}</td>
-      <td>${r.smu||''}</td>
-      <td>${life||''}</td>
-      <td>${pctBadge(pct)}</td>
-      <td>${rating}</td>
-      <td title="${esc(remarks)}">${esc(remarks).slice(0,18)}${remarks.length>18?'…':''}</td>
-      <td>${pic}</td>
-      <td>
-        <button class="action-btn edit">✏️</button>
-        <button class="action-btn del">🗑️</button>
-      </td>
-    </tr>`;
-  }
+function rowHtml(r) {
+  const nextChange = computeNextChange(r);
+  const life = computeLife(r);
+  const pct = computePct(life, r.freq);
+  const rating = (typeof r.rating === 'number' && r.rating > 0) ? '⭐'.repeat(r.rating) : '-';
+  const pic = r.pictureUrl
+    ? <a href="${r.pictureUrl}" target="_blank"><img class="thumb" src="${r.pictureUrl}"/></a>
+    : '-';
+  const remarks = r.remarks || "";
+
+  return `<tr data-id="${r.id}">
+    <td>${esc(r.equip)}</td>
+    <td>${esc(r.model)}</td>
+    <td>${esc(r.component)}</td>
+    <td>${r.freq||''}</td>
+    <td>${fmtMoney(r.cost)}</td>
+    <td>${r.changeOut||''}</td>
+    <td>${nextChange||''}</td>
+    <td>${r.smu||''}</td>
+    <td>${life||''}</td>
+    <td>${pctBadge(pct)}</td>
+    <td>${rating}</td>
+    <td title="${esc(remarks)}">${esc(remarks).slice(0,18)}${remarks.length>18?'…':''}</td>
+    <td>${pic}</td>
+    <td>
+      <button class="action-btn edit">✏️</button>
+      <button class="action-btn del">🗑️</button>
+    </td>
+  </tr>`;
+}
 
   function attachRowEvents(){
     tbody.querySelectorAll('.edit').forEach(btn=>btn.addEventListener('click', onEdit));
@@ -286,3 +290,4 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
