@@ -56,12 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const col = db.collection('components');
 
   // ===== Helpers =====
-  const fmtMoney = v => v != null ? $${Number(v).toLocaleString()} : '-';
+  const fmtMoney = v => v != null ? `${Number(v).toLocaleString()}` : '-';
   const pctBadge = (pct) => {
     if (pct == null || isNaN(pct)) return '-';
-    if (pct < 60) return <span class="badge ok">${pct}%</span>;
-    if (pct < 85) return <span class="badge warn">${pct}%</span>;
-    return <span class="badge danger">${pct}%</span>;
+    if (pct < 60) return `<span class="badge ok">${pct}%</span>`;
+    if (pct < 85) return `<span class="badge warn">${pct}%</span>`;
+    return `<span class="badge danger">${pct}%</span>`;
   };
 
   function numOrNull(v) {
@@ -89,41 +89,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const models = uniq(rows.map(r => r.model));
     const comps = uniq(rows.map(r => r.component));
     [filterEquip, filterModel, filterComponent].forEach(sel => sel.length = 1);
-    equips.forEach(v => filterEquip.insertAdjacentHTML('beforeend', <option>${v}</option>));
-    models.forEach(v => filterModel.insertAdjacentHTML('beforeend', <option>${v}</option>));
-    comps.forEach(v => filterComponent.insertAdjacentHTML('beforeend', <option>${v}</option>));
+    equips.forEach(v => filterEquip.insertAdjacentHTML('beforeend', `<option>${v}</option>`));
+    models.forEach(v => filterModel.insertAdjacentHTML('beforeend', `<option>${v}</option>`));
+    comps.forEach(v => filterComponent.insertAdjacentHTML('beforeend', `<option>${v}</option>`));
   }
 
   function applyFilter(rows) {
-  const e = filterEquip.value,
-        m = filterModel.value,
-        c = filterComponent.value;
+    const e = filterEquip.value,
+          m = filterModel.value,
+          c = filterComponent.value;
 
-  return rows.filter(r =>
-    (!e || r.equip === e) &&
-    (!m || r.model === m) &&
-    (!c || r.component === c)
-  );
-}
+    return rows.filter(r =>
+      (!e || r.equip === e) &&
+      (!m || r.model === m) &&
+      (!c || r.component === c)
+    );
+  }
 
   // ===== Table render =====
-function renderTable() {
-  const rows = applyFilter(allDocs);
-  tbody.innerHTML = rows.map(r => rowHtml(r)).join('');
-  attachRowEvents();
-}
+  function renderTable() {
+    const rows = applyFilter(allDocs);
+    tbody.innerHTML = rows.map(r => rowHtml(r)).join('');
+    attachRowEvents();
+  }
 
-function rowHtml(r) {
-  const nextChange = computeNextChange(r);
-  const life = computeLife(r);
-  const pct = computePct(life, r.freq);
-  const rating = (typeof r.rating === 'number' && r.rating > 0) ? '⭐'.repeat(r.rating) : '-';
-  const pic = r.pictureUrl
-    ? <a href="${r.pictureUrl}" target="_blank"><img class="thumb" src="${r.pictureUrl}"/></a>
-    : '-';
-  const remarks = r.remarks || "";
+  function rowHtml(r) {
+    const nextChange = computeNextChange(r);
+    const life = computeLife(r);
+    const pct = computePct(life, r.freq);
+    const rating = (typeof r.rating === 'number' && r.rating > 0) ? '⭐'.repeat(r.rating) : '-';
+    const pic = r.pictureUrl
+      ? `<a href="${r.pictureUrl}" target="_blank"><img class="thumb" src="${r.pictureUrl}"/></a>`
+      : '-';
+    const remarks = r.remarks || "";
 
-  return `<tr data-id="${r.id}">
+    return `<tr data-id="${r.id}">
     <td>${esc(r.equip)}</td>
     <td>${esc(r.model)}</td>
     <td>${esc(r.component)}</td>
@@ -142,7 +142,7 @@ function rowHtml(r) {
       <button class="action-btn del">🗑️</button>
     </td>
   </tr>`;
-}
+  }
 
   function attachRowEvents(){
     tbody.querySelectorAll('.edit').forEach(btn=>btn.addEventListener('click', onEdit));
@@ -219,7 +219,7 @@ function rowHtml(r) {
       const docRef = doc(db,'components',editId);
       const file = inputs.picture.files[0];
       if(file){
-        const r = ref(storage, pictures/${editId}/${file.name});
+        const r = ref(storage, `pictures/${editId}/${file.name}`);
         await uploadBytes(r,file);
         payload.pictureUrl = await getDownloadURL(r);
       }
@@ -228,7 +228,7 @@ function rowHtml(r) {
       const docRef = await addDoc(col,payload);
       const file = inputs.picture.files[0];
       if(file){
-        const r = ref(storage, pictures/${docRef.id}/${file.name});
+        const r = ref(storage, `pictures/${docRef.id}/${file.name}`);
         await uploadBytes(r,file);
         await updateDoc(doc(db,'components',docRef.id),{pictureUrl:await getDownloadURL(r)});
       }
@@ -271,23 +271,26 @@ function rowHtml(r) {
   const bulkTA = document.getElementById('smuBulk');
   const bulkResult = document.getElementById('bulkResult');
 
-  previewBtn.addEventListener('click', ()=>{
-    const lines = bulkTA.value.split('\n').map(l=>l.trim()).filter(Boolean);
-    bulkResult.innerHTML = lines.map(l=>esc(l)).join('<br/>');
-  });
+  if(previewBtn){
+    previewBtn.addEventListener('click', ()=>{
+      const lines = bulkTA.value.split('\n').map(l=>l.trim()).filter(Boolean);
+      bulkResult.innerHTML = lines.map(l=>esc(l)).join('<br/>');
+    });
+  }
 
-  applyBtn.addEventListener('click', async ()=>{
-    const lines = bulkTA.value.split('\n').map(l=>l.trim()).filter(Boolean);
-    for(const line of lines){
-      const [equip, smu] = line.split(',').map(s=>s.trim());
-      if(!equip||!smu) continue;
-      const docToUpdate = allDocs.find(d=>d.equip===equip);
-      if(docToUpdate){
-        await updateDoc(doc(db,'components',docToUpdate.id), {smu:Number(smu)});
+  if(applyBtn){
+    applyBtn.addEventListener('click', async ()=>{
+      const lines = bulkTA.value.split('\n').map(l=>l.trim()).filter(Boolean);
+      for(const line of lines){
+        const [equip, smu] = line.split(',').map(s=>s.trim());
+        if(!equip||!smu) continue;
+        const docToUpdate = allDocs.find(d=>d.equip===equip);
+        if(docToUpdate){
+          await updateDoc(doc(db,'components',docToUpdate.id), {smu:Number(smu)});
+        }
       }
-    }
-    alert('SMU Updated!');
-  });
+      alert('SMU Updated!');
+    });
+  }
 
 });
-
