@@ -63,8 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let allDocs = [];  
   const col = db ? db.collection('components') : null;  
 
-  // ===== Helpers =====  
-  const fmtMoney = v => (v != null) ? `${Number(v).toLocaleString()}` : '-';  
+  // ===== Helpers =====
+const fmtMoney = v => (v != null) ? ${Number(v).toLocaleString()} : '-';
+const esc = s => (s != null) ? String(s).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>') : '';  
 
   const pctBadge = (pct) => {  
     if (pct == null || isNaN(pct)) return '-';  
@@ -299,6 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+
 
 
 
