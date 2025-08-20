@@ -12,98 +12,120 @@ const firebaseConfig = {
   appId: "1:401190574281:web:16c2401b5bda146779d518",
   measurementId: "G-77WF4LVS25"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-const compRef = collection(db, "components");
-const smuRef = collection(db, "current_smu");
+const compTableBody = document.getElementById("compTableBody");
 
-const tbody = document.querySelector("#compTable tbody");
-const addNewBtn = document.getElementById("addNewBtn");
-const modal = document.getElementById("modal");
-const addForm = document.getElementById("addForm");
-const closeModal = document.getElementById("closeModal");
-const smuForm = document.getElementById("smuForm");
-const smuList = document.getElementById("smuList");
+function showSection(id) {
+  document.querySelectorAll(".section").forEach(sec => sec.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+}
 
-// Tab switching
-document.querySelectorAll(".tab-btn").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
-    document.getElementById(btn.dataset.tab).classList.add("active");
-  });
-});
+function showAddNewForm() {
+  document.getElementById("addNewForm").classList.remove("hidden");
+}
 
-// Modal open/close
-addNewBtn.onclick = ()=> modal.classList.remove("hidden");
-closeModal.onclick = ()=> modal.classList.add("hidden");
+function hideAddNewForm() {
+  document.getElementById("addNewForm").classList.add("hidden");
+}
 
-// Add new component
-addForm.onsubmit = async (e)=>{
-  e.preventDefault();
-  const data = Object.fromEntries(new FormData(addForm));
-  let fileUrl = "";
-  if(data.file && data.file.size > 0){
-    const storageRef = ref(storage, "uploads/"+data.file.name);
-    await uploadBytes(storageRef, data.file);
-    fileUrl = await getDownloadURL(storageRef);
-  }
-  await addDoc(compRef, {
-    equipment: data.equipment,
-    model: data.model,
-    component: data.component,
-    freq: Number(data.freq),
-    cost: Number(data.cost),
-    changeOut: Number(data.changeOut),
-    rating: data.rating || "",
-    remarks: data.remarks || "",
-    file: fileUrl
-  });
-  addForm.reset();
-  modal.classList.add("hidden");
-};
+// 🔄 Load Data
+async function loadComponents() {
+  compTableBody.innerHTML = "";
+  const querySnapshot = await getDocs(collection(db, "components"));
+  querySnapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const nextChange = (parseInt(data.changeOut) || 0) + (parseInt(data.freq) || 0);
+    const life = (parseInt(data.currentSMU) || 0) - (parseInt(data.changeOut) || 0);
+    const lifePct = data.freq ? ((life / data.freq) * 100).toFixed(1) : 0;
 
-// Live table
-onSnapshot(compRef, (snapshot)=>{
-  tbody.innerHTML = "";
-  snapshot.forEach(docSnap=>{
-    const d = docSnap.data();
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
-      <td contenteditable>${d.equipment}</td>
-      <td contenteditable>${d.model}</td>
-      <td contenteditable>${d.component}</td>
-      <td contenteditable>${d.freq}</td>
-      <td contenteditable>${d.cost}</td>
-      <td contenteditable>${d.changeOut}</td>
-      <td contenteditable>${d.rating}</td>
-      <td contenteditable>${d.remarks}</td>
-      <td>${d.file ? `<a href="${d.file}" target="_blank">View</a>` : ""}</td>
-      <td></td><td></td><td></td><td></td>
+      <td>${data.equipment}</td>
+      <td>${data.component}</td>
+      <td>${data.changeOut || 0}</td>
+      <td>${data.freq || 0}</td>
+      <td>${data.currentSMU || 0}</td>
+      <td>${nextChange}</td>
+      <td>${life}</td>
+      <td>${lifePct}%</td>
+      <td>${data.rating || ""}</td>
+      <td>${data.remarks || ""}</td>
+      <td>${data.pictureURL ? `<a href="${data.pictureURL}" target="_blank">View</a>` : ""}</td>
+      <td><button onclick="editRow('${docSnap.id}')">Edit</button></td>
     `;
-    tbody.appendChild(tr);
-  });
-});
 
-// Update SMU
-smuForm.onsubmit = async (e)=>{
+    // 🔴 Conditional formatting
+    if (data.rating && data.rating.toUpperCase() === "X") tr.classList.add("red-bg");
+    if (life > data.freq) tr.classList.add("red-bg");
+    if (lifePct > 100) tr.classList.add("red-bg");
+
+    compTableBody.appendChild(tr);
+  });
+}
+
+// ➕ Add new
+async function addNewComponent(e) {
   e.preventDefault();
-  const eq = document.getElementById("smuEquip").value;
-  const val = Number(document.getElementById("smuValue").value);
-  await addDoc(smuRef, { equipment: eq, smu: val, updated: Date.now() });
-  smuForm.reset();
-};
-onSnapshot(smuRef, (snap)=>{
-  smuList.innerHTML = "";
-  snap.forEach(docSnap=>{
-    const d = docSnap.data();
-    const li = document.createElement("li");
-    li.textContent = `${d.equipment}: ${d.smu}`;
-    smuList.appendChild(li);
-  });
-});
+  const file = document.getElementById("newPicture").files[0];
+  let pictureURL = "";
+  if (file) {
+    const storageRef = ref(storage, "pictures/" + file.name);
+    await uploadBytes(storageRef, file);
+    pictureURL = await getDownloadURL(storageRef);
+  }
 
+  await addDoc(collection(db, "components"), {
+    equipment: document.getElementById("newEquipment").value,
+    component: document.getElementById("newComponent").value,
+    changeOut: parseInt(document.getElementById("newChangeOut").value),
+    freq: parseInt(document.getElementById("newFreq").value),
+    currentSMU: 0,
+    rating: document.getElementById("newRating").value,
+    remarks: document.getElementById("newRemarks").value,
+    pictureURL
+  });
+
+  hideAddNewForm();
+  loadComponents();
+}
+
+// ✏️ Edit row (simple alert for now)
+function editRow(id) {
+  alert("Edit & Save feature coming here. Row ID: " + id);
+}
+
+// 🛠 Update Current SMU (bulk)
+async function updateCurrentSMU(e) {
+  e.preventDefault();
+  const lines = document.getElementById("bulkSMU").value.split("\n");
+  for (const line of lines) {
+    const [equipment, smu] = line.split(",");
+    if (!equipment || !smu) continue;
+
+    const querySnapshot = await getDocs(collection(db, "components"));
+    querySnapshot.forEach(async docSnap => {
+      if (docSnap.data().equipment === equipment.trim()) {
+        await updateDoc(doc(db, "components", docSnap.id), {
+          currentSMU: parseInt(smu.trim())
+        });
+      }
+    });
+  }
+  loadComponents();
+}
+
+window.showSection = showSection;
+window.showAddNewForm = showAddNewForm;
+window.hideAddNewForm = hideAddNewForm;
+window.addNewComponent = addNewComponent;
+window.editRow = editRow;
+window.updateCurrentSMU = updateCurrentSMU;
+
+// Initial load
+loadComponents();
 
