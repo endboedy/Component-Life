@@ -108,3 +108,4 @@ window.deleteRow = async function(id) {
   alert("Data deleted!");
   loadData();
 };
+
