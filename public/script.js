@@ -55,25 +55,34 @@ document.addEventListener('DOMContentLoaded', () => {
   let allDocs = [];
   const col = db.collection('components');
 
-  // ===== Helpers =====
-  const fmtMoney = v => v != null ? `${Number(v).toLocaleString()}` : '-';
-  const pctBadge = (pct) => {
-    if (pct < 60) return <span class="badge ok">${pct}%</span>;
-    if (pct < 85) return <span class="badge warn">${pct}%</span>;
-    return <span class="badge danger">${pct}%</span>;
-  };
+ // ===== Helpers =====
+const fmtMoney = v => (v != null) ? `${Number(v).toLocaleString()}` : '-';
 
-  function numOrNull(v) {
-    const n = Number(v);
-    return isNaN(n) || v === '' ? null : n;
-  }
+const pctBadge = (pct) => {
+  if (pct == null || isNaN(pct)) return '-';
+  if (pct < 60) return `<span class="badge ok">${pct}%</span>`;
+  if (pct < 85) return `<span class="badge warn">${pct}%</span>`;
+  return `<span class="badge danger">${pct}%</span>`;
+};
 
-  function esc(s) {
-    return String(s || '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;');
-  }
+// Contoh pemakaian:
+// Misalnya kamu punya data objek
+// const data = { value: 12345, pct: 72 };
+
+// Contoh render ke DOM jika ada elemen placeholder
+function renderExample(data) {
+  const moneyEl = document.getElementById('money');
+  const pctEl = document.getElementById('pct');
+
+  if (moneyEl) moneyEl.textContent = fmtMoney(data?.value);
+  if (pctEl) pctEl.innerHTML = pctBadge(data?.pct);
+}
+
+// Jika tidak ada DOM saat load, tetap definisikan fungsi untuk dipakai di tempat lain
+if (typeof window !== 'undefined') {
+  // Contoh inisialisasi dengan data dummy (hapus jika sudah ada)
+  // renderExample({ value: 1234567, pct: 42 });
+}
 
   // ===== Fetch Firestore =====
   col.orderBy('equip').onSnapshot(snap => {
@@ -293,4 +302,5 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+
 
