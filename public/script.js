@@ -81,25 +81,36 @@ saveBtn.addEventListener("click", async () => {
 // fungsi render row ke tabel
 function addRowToTable(data) {
   let row = `
-    row.innerHTML = `
-  <td>${data.equip}</td>
-  <td>${data.model}</td>
-  <td>${data.component}</td>
-  <td>${data.freq}</td>
-  <td>${data.cost}</td>
-  <td>${data.changeOut}</td>
-  <td>${data.nextChange}</td>
-  <td class="current-smu">${data.currentSMU}</td>
-  <td class="life">${data.life}</td>
-  <td class="lifePct">${data.lifePct}%</td>
-  <td>${data.rating}</td>
-  <td>${data.remarks}</td>
-  <td>${data.foto ? <img src="${data.foto}" width="50"> : ""}</td>
-`;
+    <tr>
+      <td>${data.equip}</td>
+      <td>${data.model}</td>
+      <td>${data.component}</td>
+      <td>${data.freq}</td>
+      <td>${data.cost}</td>
+      <td>${data.changeOut}</td>
+      <td>${data.nextChange}</td>
+      <td class="current-smu">${data.currentSMU}</td>
+      <td class="life">${data.life}</td>
+      <td class="lifePct">${data.lifePct}%</td>
+      <td>${data.rating}</td>
+      <td>${data.remarks}</td>
+      <td>${data.foto ? <img src="${data.foto}" width="50"> : ""}</td>
     </tr>
   `;
-  dataTable.insertAdjacentHTML("beforeend", row);
+  document
+    .getElementById("dataTable")
+    .getElementsByTagName("tbody")[0]
+    .insertAdjacentHTML("beforeend", row);
 }
+
+// load data dari Firestore saat awal
+async function loadData() {
+  const querySnapshot = await getDocs(collection(db, "component_life"));
+  querySnapshot.forEach((docSnap) => {
+    addRowToTable({ id: docSnap.id, ...docSnap.data() });
+  });
+}
+loadData();
 
 // load data dari Firestore saat awal
 async function loadData() {
@@ -122,4 +133,5 @@ window.deleteRow = async function(id) {
 window.editRow = function(id) {
   alert("Edit fungsi untuk ID: " + id + " masih dalam pengembangan");
 };
+
 
