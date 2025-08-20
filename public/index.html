@@ -1,66 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>⚙️ Component Life</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Component Life EM</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="app-header">
-    <h1>⚙️ Component Life</h1>
+    <h1>⚙️ Component Life EM</h1>
     <nav class="menu">
-      <button onclick="showSection('compLife')">Comp-Life</button>
-      <button onclick="showSection('currentSMU')">Update Current SMU</button>
+      <button id="menu-comp-life">Comp-Life</button>
+      <button id="menu-update-smu">Update Current SMU</button>
     </nav>
   </header>
 
-  <!-- Comp-Life Section -->
-  <section id="compLife" class="section">
-    <table id="compTable">
+  <!-- Menu 1 Comp-Life -->
+  <section id="comp-life-section">
+    <div class="toolbar">
+      <input type="text" id="filter-equipment" placeholder="Filter Equipment...">
+      <input type="text" id="filter-model" placeholder="Filter Model...">
+      <input type="text" id="filter-component" placeholder="Filter Component...">
+      <button id="add-new">+ Add New</button>
+    </div>
+    <table id="component-table">
       <thead>
         <tr>
           <th>Equipment</th>
+          <th>Model</th>
           <th>Component</th>
-          <th>Change Out</th>
           <th>Freq</th>
+          <th>Cost</th>
+          <th>Change Out</th>
+          <th>Rating</th>
+          <th>Remarks</th>
+          <th>Picture/PDF</th>
           <th>Current SMU</th>
           <th>Next Change</th>
           <th>Life</th>
           <th>Life %</th>
-          <th>Rating</th>
-          <th>Remarks</th>
-          <th>Picture</th>
           <th>Action</th>
         </tr>
       </thead>
-      <tbody id="compTableBody">
-        <!-- Data from Firebase -->
-      </tbody>
+      <tbody id="component-body"></tbody>
     </table>
-    <button id="addNewBtn" onclick="showAddNewForm()">➕ Add New</button>
-    <form id="addNewForm" class="hidden" onsubmit="addNewComponent(event)">
-      <input type="text" id="newEquipment" placeholder="Equipment" required />
-      <input type="text" id="newComponent" placeholder="Component" required />
-      <input type="number" id="newChangeOut" placeholder="Change Out" required />
-      <input type="number" id="newFreq" placeholder="Freq" required />
-      <input type="text" id="newRating" placeholder="Rating" />
-      <input type="text" id="newRemarks" placeholder="Remarks" />
-      <input type="file" id="newPicture" accept=".jpg,.jpeg,.png,.pdf" />
-      <button type="submit">Save</button>
-      <button type="button" onclick="hideAddNewForm()">Cancel</button>
-    </form>
   </section>
 
-  <!-- Update Current SMU Section -->
-  <section id="currentSMU" class="section hidden">
-    <h2>Update Current SMU</h2>
-    <form id="updateSMUForm" onsubmit="updateCurrentSMU(event)">
-      <textarea id="bulkSMU" placeholder="Equipment, Current SMU (per line)" rows="8"></textarea>
-      <button type="submit">Update</button>
-    </form>
+  <!-- Menu 2 Update Current SMU -->
+  <section id="update-smu-section" style="display:none;">
+    <h2>🔧 Update Current SMU</h2>
+    <table id="smu-table">
+      <thead>
+        <tr>
+          <th>Equipment ID</th>
+          <th>Current SMU</th>
+        </tr>
+      </thead>
+      <tbody id="smu-body"></tbody>
+    </table>
+    <button id="save-smu">Save SMU Updates</button>
   </section>
 
-  <script type="module" src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
