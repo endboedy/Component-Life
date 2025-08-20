@@ -1,97 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Component Life EM</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>⚙️ Component Life EM</h1>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="compLife">Comp-Life</button>
+      <button class="tab-btn" data-tab="updateSMU">Update Current SMU</button>
+    </nav>
+  </header>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-analytics.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+  <main>
+    <!-- Comp-Life Table -->
+    <section id="compLife" class="tab-content active">
+      <div class="controls">
+        <input id="filterEquip" placeholder="Filter Equipment..." />
+        <input id="filterModel" placeholder="Filter Model..." />
+        <input id="filterComp" placeholder="Filter Component..." />
+        <button id="addNewBtn">+ Add New</button>
+      </div>
+      <table id="compTable">
+        <thead>
+          <tr>
+            <th>Equipment</th><th>Model</th><th>Component</th><th>Freq</th>
+            <th>Cost</th><th>Change Out</th><th>Rating</th><th>Remarks</th>
+            <th>Picture/PDF</th><th>Current SMU</th>
+            <th>Next Change</th><th>Life</th><th>Life %</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAHQFyRifcuYJYGuiQaK9vvWJpYGfoDdmI",
-    authDomain: "component-life.firebaseapp.com",
-    projectId: "component-life",
-    storageBucket: "component-life.appspot.com",
-    messagingSenderId: "401190574281",
-    appId: "1:401190574281:web:16c2401b5bda146779d518",
-    measurementId: "G-77WF4LVS25"
-  };
+    <!-- Update SMU -->
+    <section id="updateSMU" class="tab-content">
+      <form id="smuForm">
+        <input id="smuEquip" placeholder="Equipment ID" required />
+        <input id="smuValue" type="number" placeholder="Current SMU" required />
+        <button type="submit">Update</button>
+      </form>
+      <ul id="smuList"></ul>
+    </section>
+  </main>
 
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const db = getFirestore(app);
+  <!-- Modal Add New -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Add New Component</h2>
+      <form id="addForm">
+        <input name="equipment" placeholder="Equipment" required />
+        <input name="model" placeholder="Model" required />
+        <input name="component" placeholder="Component" required />
+        <input name="freq" type="number" placeholder="Freq (hrs)" required />
+        <input name="cost" type="number" placeholder="Cost" required />
+        <input name="changeOut" type="number" placeholder="Change Out" required />
+        <input name="rating" placeholder="Rating" />
+        <input name="remarks" placeholder="Remarks" />
+        <input name="file" type="file" accept=".jpg,.jpeg,.png,.pdf" />
+        <button type="submit">Save</button>
+        <button type="button" id="closeModal">Cancel</button>
+      </form>
+    </div>
+  </div>
 
-  const currentSMU = { "EX1001": 5000, "EX1002": 6200 };
-
-  function openForm() {
-    document.querySelector('.overlay').style.display = 'block';
-    document.querySelector('.form-popup').style.display = 'block';
-  }
-
-  function closeForm() {
-    document.querySelector('.overlay').style.display = 'none';
-    document.querySelector('.form-popup').style.display = 'none';
-  }
-
-  document.getElementById('addForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const form = e.target;
-    const equip = form.equip.value;
-    const model = form.model.value;
-    const component = form.component.value;
-    const freq = parseFloat(form.freq.value);
-    const cost = parseFloat(form.cost.value);
-    const changeOut = parseFloat(form.changeOut.value);
-    const rating = form.rating.value;
-    const remarks = form.remarks.value;
-    const foto = form.foto.files[0]?.name || '';
-
-    const current = currentSMU[equip] || 0;
-    const nextChange = changeOut + freq;
-    const life = current - changeOut;
-    const lifePercent = ((life / freq) * 100).toFixed(1);
-
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${equip}</td><td>${model}</td><td>${component}</td><td>${freq}</td><td>${cost}</td><td>${changeOut}</td>
-      <td>${nextChange}</td><td>${current}</td><td>${life}</td><td>${lifePercent}%</td><td>${rating}</td><td>${remarks}</td>
-      <td>${foto}</td>
-      <td>
-        <button class="btn btn-sm btn-warning" onclick="editRow(this)">Edit</button>
-        <button class="btn btn-sm btn-success" onclick="saveRow(this)">Save</button>
-      </td>
-    `;
-    document.getElementById('dataTable').appendChild(row);
-    closeForm();
-    form.reset();
-
-    // Save to Firestore
-    const data = {
-      equip, model, component, freq, cost, changeOut, nextChange, current, life, lifePercent, rating, remarks, foto,
-      timestamp: new Date()
-    };
-    try {
-      await addDoc(collection(db, "component_life"), data);
-      console.log("Data berhasil disimpan ke Firestore");
-    } catch (error) {
-      console.error("Gagal simpan data:", error);
-    }
-  });
-
-  window.editRow = function(btn) {
-    const row = btn.closest('tr');
-    [...row.children].forEach((cell, i) => {
-      if (i < 13) {
-        const val = cell.innerText;
-        cell.innerHTML = `<input class="form-control form-control-sm" value="${val.replace('%','')}" />`;
-      }
-    });
-  }
-
-  window.saveRow = function(btn) {
-    const row = btn.closest('tr');
-    [...row.children].forEach((cell, i) => {
-      if (i < 13) {
-        const input = cell.querySelector('input');
-        if (input) cell.innerText = i === 9 ? `${input.value}%` : input.value;
-      }
-    });
-  }
-</script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>
