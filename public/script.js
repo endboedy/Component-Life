@@ -1,109 +1,98 @@
-document.addEventListener('DOMContentLoaded', () => {  
-  // ===== Tabs =====  
-  const tabs = document.querySelectorAll('.tab-btn');  
-  const pages = document.querySelectorAll('.tab-page');  
-  tabs.forEach(btn => btn.addEventListener('click', () => {  
-    tabs.forEach(b => b.classList.remove('active'));  
-    pages.forEach(p => p.classList.remove('active'));  
-    btn.classList.add('active');  
-    document.getElementById(btn.dataset.tab).classList.add('active');  
-  }));  
 
-  // ===== Firebase config =====  
-  const firebaseConfig = {  
-    apiKey: "YOUR_API_KEY",  
-    authDomain: "component-life.firebaseapp.com",  
-    projectId: "component-life",  
-    storageBucket: "component-life.appspot.com",  
-    messagingSenderId: "",  
-    appId: ""  
-  };  
+// script.js (modular Firebase SDK)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
 
-  // Initialize Firebase if SDK loaded  
-  let app, db, storage;  
-  if (typeof firebase !== 'undefined') {  
-    if (!firebase.apps || firebase.apps.length === 0) {  
-      firebase.initializeApp(firebaseConfig);  
-    }  
-    app = firebase.app();  
-    db = firebase.firestore(app);  
-    storage = firebase.storage(app);  
-  } else {  
-    console.error('Firebase SDK not loaded. Include firebase-app.js (and firestore/storage jika diperlukan) before this script.');  
-  }  
+document.addEventListener('DOMContentLoaded', () => {
+  // ===== Tabs =====
+  const tabs = document.querySelectorAll('.tab-btn');
+  const pages = document.querySelectorAll('.tab-page');
+  tabs.forEach(btn => btn.addEventListener('click', () => {
+    tabs.forEach(b => b.classList.remove('active'));
+    pages.forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  }));
 
-  // ===== DOM Refs =====  
-  const tbody = document.getElementById('compTbody');  
-  const filterEquip = document.getElementById('filterEquip');  
-  const filterModel = document.getElementById('filterModel');  
-  const filterComponent = document.getElementById('filterComponent');  
-  const btnApplyFilter = document.getElementById('btnApplyFilter');  
-  const btnClearFilter = document.getElementById('btnClearFilter');  
-  const btnAddNew = document.getElementById('btnAddNew');  
-  const modal = document.getElementById('modalForm');  
-  const spanClose = modal.querySelector('.close');  
-  const form = document.getElementById('componentForm');  
-  const modalTitle = document.getElementById('modalTitle');  
-  const inputs = {  
-    equip: document.getElementById('formEquip'),  
-    model: document.getElementById('formModel'),  
-    component: document.getElementById('formComponent'),  
-    freq: document.getElementById('formFreq'),  
-    cost: document.getElementById('formCost'),  
-    changeOut: document.getElementById('formChangeOut'),  
-    smu: document.getElementById('formSMU'),  
-    life: document.getElementById('formLife'),  
-    pct: document.getElementById('formPct'),  
-    rating: document.getElementById('formRating'),  
-    remarks: document.getElementById('formRemarks'),  
-    picture: document.getElementById('formPicture')  
-  };  
+  // ===== Firebase config =====
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "component-life.firebaseapp.com",
+    projectId: "component-life",
+    storageBucket: "component-life.appspot.com",
+    messagingSenderId: "",
+    appId: ""
+  };
 
-  let editId = null;  
-  let allDocs = [];  
-  const col = db ? db.collection('components') : null;  
+  // Inisialisasi Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+
+  // ===== DOM Refs =====
+  const tbody = document.getElementById('compTbody');
+  const filterEquip = document.getElementById('filterEquip');
+  const filterModel = document.getElementById('filterModel');
+  const filterComponent = document.getElementById('filterComponent');
+  const btnApplyFilter = document.getElementById('btnApplyFilter');
+  const btnClearFilter = document.getElementById('btnClearFilter');
+  const btnAddNew = document.getElementById('btnAddNew');
+  const modal = document.getElementById('modalForm');
+  const spanClose = modal.querySelector('.close');
+  const form = document.getElementById('componentForm');
+  const modalTitle = document.getElementById('modalTitle');
+  const inputs = {
+    equip: document.getElementById('formEquip'),
+    model: document.getElementById('formModel'),
+    component: document.getElementById('formComponent'),
+    freq: document.getElementById('formFreq'),
+    cost: document.getElementById('formCost'),
+    changeOut: document.getElementById('formChangeOut'),
+    smu: document.getElementById('formSMU'),
+    life: document.getElementById('formLife'),
+    pct: document.getElementById('formPct'),
+    rating: document.getElementById('formRating'),
+    remarks: document.getElementById('formRemarks'),
+    picture: document.getElementById('formPicture')
+  };
+
+  let editId = null;
+  let allDocs = [];
 
   // ===== Helpers =====
-const fmtMoney = v => (v != null) ? `${Number(v).toLocaleString()}` : '-';
-const esc = s => (s != null)
-  ? String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-  : '';
+  const fmtMoney = v => (v != null) ? `${Number(v).toLocaleString()}` : '-';
+  const esc = s => (s != null)
+    ? String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+    : '';
 
-  const pctBadge = (pct) => {  
-    if (pct == null || isNaN(pct)) return '-';  
-    if (pct < 60) return `<span class="badge ok">${pct}%</span>`;  
-    if (pct < 85) return `<span class="badge warn">${pct}%</span>`;  
-    return `<span class="badge danger">${pct}%</span>`;  
-  };  
+  const pctBadge = (pct) => {
+    if (pct == null || isNaN(pct)) return '-';
+    if (pct < 60) return `<span class="badge ok">${pct}%</span>`;
+    if (pct < 85) return `<span class="badge warn">${pct}%</span>`;
+    return `<span class="badge danger">${pct}%</span>`;
+  };
 
-  // Contoh render contoh (opsional)  
-  function renderExample(data) {  
-    const moneyEl = document.getElementById('money');  
-    const pctEl = document.getElementById('pct');  
-    if (moneyEl) moneyEl.textContent = fmtMoney(data?.value);  
-    if (pctEl) pctEl.innerHTML = pctBadge(data?.pct);  
-  }  
+  function renderExample(data) {
+    const moneyEl = document.getElementById('money');
+    const pctEl = document.getElementById('pct');
+    if (moneyEl) moneyEl.textContent = fmtMoney(data?.value);
+    if (pctEl) pctEl.innerHTML = pctBadge(data?.pct);
+  }
 
-  // If firebase not ready, skip Firestore related setups  
-  let colListenerActive = false;  
+  function populateFilters(rows) {
+    const uniq = arr => Array.from(new Set(arr.filter(Boolean)));
+    const equips = uniq(rows.map(r => r.equip));
+    const models = uniq(rows.map(r => r.model));
+    const comps = uniq(rows.map(r => r.component));
 
-  // ===== Fetch Firestore =====  
-  if (db && col) {  
-    col.orderBy('equip').onSnapshot(snap => {  
-      allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));  
-      populateFilters(allDocs);  
-      renderTable();  
-    });  
-  }  
-
-  function populateFilters(rows) {  
-    const uniq = arr => Array.from(new Set(arr.filter(Boolean)));  
-    const equips = uniq(rows.map(r => r.equip));  
-    const models = uniq(rows.map(r => r.model));  
-    const comps = uniq(rows.map(r =>
+    filterEquip.innerHTML = `<option value="">Equip (All)</option>` + equips.map(e => `<option>${e}</option>`).join('');
+    filterModel.innerHTML = `<option value="">Model (All)</option>` + models.map(m => `<option>${m}</option>`).join('');
+    filterComponent.innerHTML = `<option value="">Component (All)</option>` + comps.map(c => `<option>${c}</option>`).join('');
+  }
 
   function applyFilter(rows) {
     const e = filterEquip.value,
@@ -116,6 +105,39 @@ const esc = s => (s != null)
       (!c || r.component === c)
     );
   }
+
+  function renderTable() {
+    const rows = applyFilter(allDocs);
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${esc(r.equip)}</td>
+        <td>${esc(r.model)}</td>
+        <td>${esc(r.component)}</td>
+        <td>${r.freq ?? '-'}</td>
+        <td>${fmtMoney(r.cost)}</td>
+        <td>${r.changeOut ?? '-'}</td>
+        <td>${r.nextChange ?? '-'}</td>
+        <td>${r.smu ?? '-'}</td>
+        <td>${r.life ?? '-'}</td>
+        <td>${pctBadge(r.pct)}</td>
+        <td>${r.rating ?? '-'}</td>
+        <td>${esc(r.remarks)}</td>
+        <td>${r.picture ? `<img src="${r.picture}" width="40">` : '-'}</td>
+        <td><button class="btn small">Edit</button></td>
+      </tr>
+    `).join('');
+  }
+
+  // ===== Firestore Listener =====
+  const colRef = collection(db, 'components');
+  const q = query(colRef, orderBy('equip'));
+
+  onSnapshot(q, (snap) => {
+    allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    populateFilters(allDocs);
+    renderTable();
+  });
+});
 
   // ===== Table render =====
   function renderTable() {
@@ -305,6 +327,7 @@ const esc = s => (s != null)
   }
 
 });
+
 
 
 
