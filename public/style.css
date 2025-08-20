@@ -1,15 +1,79 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fa;
+  margin: 0;
+  padding: 0;
+}
 
-.input-bar {
+.app-header {
+  background: #2b4c7e;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+}
+
+.tabs {
+  margin-top: 1rem;
+}
+
+.tab-btn {
+  margin: 0 .5rem;
+  padding: .5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #ccc;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background: #4a90e2;
+  color: white;
+}
+
+main {
+  padding: 1rem;
+}
+
+.controls {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
+  gap: .5rem;
+  margin-bottom: 1rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  box-shadow: 0 2px 6px rgba(0,0,0,.1);
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: .5rem;
+  text-align: center;
+}
+
+th {
+  background: #4a90e2;
+  color: white;
+  position: sticky;
+  top: 0;
+}
+
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  justify-content: center;
 }
-.input-bar input {
-  flex: 1;
-  min-width: 150px;
-}
-.input-bar button {
-  white-space: nowrap;
+
+.modal.hidden { display: none; }
+
+.modal-content {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  width: 400px;
 }
