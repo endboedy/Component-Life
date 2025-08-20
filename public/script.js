@@ -1,9 +1,60 @@
-unction showPage(pageId) {
+// --- Firebase Import ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+// === Firebase Config (ganti dengan punyamu dari console Firebase) ===
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "XXXXXXX",
+  appId: "YOUR_APP_ID"
+};
+
+// Init Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// --- Switch Menu ---
+window.showPage = function(pageId) {
   document.querySelectorAll(".page").forEach(p => p.style.display = "none");
   document.getElementById(pageId).style.display = "block";
-}
+};
 
-function addRow() {
+// --- Load Data from Firestore ---
+async function loadData() {
+  const tableBody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+  tableBody.innerHTML = ""; // clear dulu
+
+  const snapshot = await getDocs(collection(db, "components"));
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const row = tableBody.insertRow();
+    row.innerHTML = `
+      <td>${data.equip}</td>
+      <td>${data.model}</td>
+      <td>${data.component}</td>
+      <td>${data.freq}</td>
+      <td>${data.cost}</td>
+      <td>${data.changeOut}</td>
+      <td>${data.nextChange}</td>
+      <td class="current-smu">${data.currentSMU}</td>
+      <td class="life">${data.life}</td>
+      <td class="lifePct">${data.lifePct}%</td>
+      <td>${data.rating}</td>
+      <td>${data.remarks}</td>
+      <td>${data.foto ? <img src="${data.foto}" width="50"> : ""}</td>
+      <td>
+        <span class="action-btn" onclick="deleteRow('${docSnap.id}')">Delete</span>
+      </td>
+    `;
+  });
+}
+loadData();
+
+// --- Add New Row ---
+window.addRow = async function() {
   const equip = document.getElementById('equip').value;
   const model = document.getElementById('model').value;
   const component = document.getElementById('component').value;
@@ -12,87 +63,48 @@ function addRow() {
   const changeOut = parseInt(document.getElementById('changeOut').value) || 0;
   const rating = document.getElementById('rating').value;
   const remarks = document.getElementById('remarks').value;
-  const fotoInput = document.getElementById('foto');
-  let fotoURL = "";
-
-  if (fotoInput.files.length > 0) {
-    fotoURL = URL.createObjectURL(fotoInput.files[0]);
-  }
 
   const nextChange = changeOut + freq;
-  const currentSMU = 0; // awalnya kosong, bisa diupdate dari menu 2
+  const currentSMU = 0;
   const life = currentSMU - changeOut;
-  const lifePct = freq ? ((life / freq) * 100).toFixed(2) + "%" : "";
+  const lifePct = freq ? ((life / freq) * 100).toFixed(2) : 0;
 
-  const table = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
-  const newRow = table.insertRow();
+  await addDoc(collection(db, "components"), {
+    equip, model, component, freq, cost, changeOut,
+    nextChange, currentSMU, life, lifePct, rating, remarks
+  });
 
-  newRow.innerHTML = `
-    <td>${equip}</td>
-    <td>${model}</td>
-    <td>${component}</td>
-    <td>${freq}</td>
-    <td>${cost}</td>
-    <td>${changeOut}</td>
-    <td>${nextChange}</td>
-    <td class="current-smu">${currentSMU}</td>
-    <td class="life">${life}</td>
-    <td class="lifePct">${lifePct}</td>
-    <td>${rating}</td>
-    <td>${remarks}</td>
-    <td>${fotoURL ? <img src="${fotoURL}" width="50"> : ""}</td>
-    <td>
-      <span class="action-btn" onclick="editRow(this)">Edit</span>
-      <span class="action-btn" onclick="saveRow(this)">Save</span>
-      <span class="action-btn" onclick="deleteRow(this)">Delete</span>
-    </td>
-  `;
+  alert("Data saved!");
+  loadData();
+};
 
-  // reset form
-  document.querySelectorAll(".form-section input").forEach(i => i.value = "");
-  document.getElementById('rating').value = "";
-}
-
-function deleteRow(btn) {
-  const row = btn.parentNode.parentNode;
-  row.parentNode.removeChild(row);
-}
-
-function editRow(btn) {
-  const row = btn.parentNode.parentNode;
-  const cells = row.getElementsByTagName("td");
-
-  document.getElementById("equip").value = cells[0].innerText;
-  document.getElementById("model").value = cells[1].innerText;
-  document.getElementById("component").value = cells[2].innerText;
-  document.getElementById("freq").value = cells[3].innerText;
-  document.getElementById("cost").value = cells[4].innerText;
-  document.getElementById("changeOut").value = cells[5].innerText;
-  document.getElementById("rating").value = cells[10].innerText;
-  document.getElementById("remarks").value = cells[11].innerText;
-
-  deleteRow(btn);
-}
-
-function saveRow(btn) {
-  alert("Data updated (sementara masih dummy). Nanti bisa dihubungkan ke DB.");
-}
-
-function updateSMU() {
+// --- Update Current SMU ---
+window.updateSMU = async function() {
   const equipKey = document.getElementById("updateEquip").value;
   const newSMU = parseInt(document.getElementById("updateSMUValue").value) || 0;
 
-  const rows = document.querySelectorAll("#dataTable tbody tr");
-  rows.forEach(row => {
-    if (row.cells[0].innerText === equipKey) {
-      row.querySelector(".current-smu").innerText = newSMU;
-      const changeOut = parseInt(row.cells[5].innerText) || 0;
-      const freq = parseInt(row.cells[3].innerText) || 0;
-      const life = newSMU - changeOut;
-      const lifePct = freq ? ((life / freq) * 100).toFixed(2) + "%" : "";
+  const q = query(collection(db, "components"), where("equip", "==", equipKey));
+  const snapshot = await getDocs(q);
 
-      row.querySelector(".life").innerText = life;
-      row.querySelector(".lifePct").innerText = lifePct;
-    }
+  snapshot.forEach(async (docSnap) => {
+    const data = docSnap.data();
+    const life = newSMU - data.changeOut;
+    const lifePct = data.freq ? ((life / data.freq) * 100).toFixed(2) : 0;
+
+    await updateDoc(doc(db, "components", docSnap.id), {
+      currentSMU: newSMU,
+      life: life,
+      lifePct: lifePct
+    });
   });
-}
+
+  alert("SMU updated!");
+  loadData();
+};
+
+// --- Delete Row ---
+window.deleteRow = async function(id) {
+  await deleteDoc(doc(db, "components", id));
+  alert("Data deleted!");
+  loadData();
+};
