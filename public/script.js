@@ -325,8 +325,8 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('SMU Updated!');
     });
   }
-
 });
+
 
 
 
