@@ -1,75 +1,54 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Component Life EM</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .hidden { display: none; }
+    .form-container { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
+  </style>
 </head>
 <body>
-  <header>Component Life EM</header>
+  <h2>Component Life EM</h2>
 
-  <nav>
-    <button onclick="showPage('compLife')">Comp-Life</button>
-    <button onclick="showPage('updateSMU')">Update Current SMU</button>
-  </nav>
+  <!-- Tombol Add -->
+  <button id="addNewBtn">Add New</button>
 
-  <!-- Menu 1: Comp-Life -->
-  <div id="compLife" class="page">
-    <div class="form-section">
-      <div><label>Equip</label><input type="text" id="equip"></div>
-      <div><label>Model</label><input type="text" id="model"></div>
-      <div><label>Component</label><input type="text" id="component"></div>
-      <div><label>Freq</label><input type="number" id="freq"></div>
-      <div><label>Cost</label><input type="number" id="cost"></div>
-      <div><label>Change Out</label><input type="number" id="changeOut"></div>
-      <div><label>Rating</label>
-        <select id="rating">
-          <option value="">--Select--</option>
-          <option value="A">A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-          <option value="D">D</option>
-          <option value="X">X</option>
-        </select>
-      </div>
-      <div><label>Remarks</label><input type="text" id="remarks"></div>
-      <div><label>Foto</label><input type="file" id="foto"></div>
-      <button onclick="addRow()">Add New</button>
-    </div>
-
-    <table id="dataTable">
-      <thead>
-        <tr>
-          <th>Equip</th>
-          <th>Model</th>
-          <th>Component</th>
-          <th>Freq</th>
-          <th>Cost</th>
-          <th>Change Out</th>
-          <th>Next Change</th>
-          <th>Current SMU</th>
-          <th>Life</th>
-          <th>Life %</th>
-          <th>Rating</th>
-          <th>Remarks</th>
-          <th>Foto</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+  <!-- Form Input (default hidden) -->
+  <div id="formContainer" class="form-container hidden">
+    <label>Equip <input type="text" id="equip"></label><br>
+    <label>Model <input type="text" id="model"></label><br>
+    <label>Component <input type="text" id="component"></label><br>
+    <label>Freq <input type="number" id="freq"></label><br>
+    <label>Cost <input type="number" id="cost"></label><br>
+    <label>Change Out <input type="number" id="changeOut"></label><br>
+    <label>Rating 
+      <select id="rating">
+        <option value="">--Select--</option>
+        <option>A</option><option>B</option><option>C</option><option>D</option><option>X</option>
+      </select>
+    </label><br>
+    <label>Remarks <input type="text" id="remarks"></label><br>
+    <label>Foto <input type="file" id="foto"></label><br>
+    <button id="saveBtn">Save</button>
+    <button id="cancelBtn">Cancel</button>
   </div>
 
-  <!-- Menu 2: Update Current SMU -->
-  <div id="updateSMU" class="page" style="display:none;">
-    <div class="form-section">
-      <div><label>Equip</label><input type="text" id="updateEquip"></div>
-      <div><label>Current SMU</label><input type="number" id="updateSMUValue"></div>
-      <button onclick="updateSMU()">Update</button>
-    </div>
-  </div>
+  <!-- Tabel -->
+  <table>
+    <thead>
+      <tr>
+        <th>Equip</th><th>Model</th><th>Component</th><th>Freq</th>
+        <th>Cost</th><th>Change Out</th><th>Next Change</th>
+        <th>Current SMU</th><th>Life</th><th>Life %</th>
+        <th>Rating</th><th>Remarks</th><th>Foto</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="dataTable"></tbody>
+  </table>
 
-  <!-- Firebase SDK -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
