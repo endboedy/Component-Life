@@ -9,11 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(btn.dataset.tab).classList.add('active');
   }));
 
-  // ===== Firebase SDK (top-level import) =====
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
   // ===== Firebase config =====
   const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
@@ -24,9 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
     appId: ""
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const storage = getStorage(app);
+  // Initialize Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore(app);
+  const storage = firebase.storage(app);
 
   // ===== DOM Refs =====
   const tbody = document.getElementById('compTbody');
@@ -57,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let editId = null;
   let allDocs = [];
-  const col = collection(db, 'components');
+  const col = db.collection('components');
 
   // ===== Helpers =====
   const fmtMoney = v => v != null ? `$${Number(v).toLocaleString()}` : '-';
@@ -78,34 +74,28 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ===== Fetch Firestore =====
-  onSnapshot(query(col, orderBy('equip')), snap => {
-    allDocs = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  col.orderBy('equip').onSnapshot(snap => {
+    allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     populateFilters(allDocs);
     renderTable();
   });
 
-  function populateFilters(rows){
+  function populateFilters(rows) {
     const uniq = arr => Array.from(new Set(arr.filter(Boolean)));
-    const equips = uniq(rows.map(r=>r.equip));
-    const models = uniq(rows.map(r=>r.model));
-    const comps  = uniq(rows.map(r=>r.component));
-    [filterEquip, filterModel, filterComponent].forEach(sel=>sel.length=1);
-    equips.forEach(v=>filterEquip.insertAdjacentHTML('beforeend',`<option>${v}</option>`));
-    models.forEach(v=>filterModel.insertAdjacentHTML('beforeend',`<option>${v}</option>`));
-    comps.forEach(v=>filterComponent.insertAdjacentHTML('beforeend',`<option>${v}</option>`));
+    const equips = uniq(rows.map(r => r.equip));
+    const models = uniq(rows.map(r => r.model));
+    const comps = uniq(rows.map(r => r.component));
+    [filterEquip, filterModel, filterComponent].forEach(sel => sel.length = 1);
+    equips.forEach(v => filterEquip.insertAdjacentHTML('beforeend', `<option>${v}</option>`));
+    models.forEach(v => filterModel.insertAdjacentHTML('beforeend', `<option>${v}</option>`));
+    comps.forEach(v => filterComponent.insertAdjacentHTML('beforeend', `<option>${v}</option>`));
   }
 
-  function applyFilter(rows){
-    const e=filterEquip.value, m=filterModel.value, c=filterComponent.value;
-    return rows.filter(r => (!e||r.equip===e)&&(!m||r.model===m)&&(!c||r.component===c));
-  }
-
-  btnApplyFilter.addEventListener('click', renderTable);
-  btnClearFilter.addEventListener('click', ()=>{
-    filterEquip.value=''; filterModel.value=''; filterComponent.value='';
-    renderTable();
-  });
-
+  function applyFilter(rows) {
+    const e = filterEquip.value,
+      m = filterModel.value,
+      c = filterComponent.value;
+    return rows.filter(r => (!e || r.equip === e) && (!m || r.model === m) && (!c ||
   // ===== Table render =====
   function renderTable(){
     const rows = applyFilter(allDocs);
@@ -282,6 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
 
 
 
