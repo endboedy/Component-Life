@@ -1,110 +1,80 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Component Life</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Comp-Life & Current SMU</title>
+  https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css
+  <style>
+    body { padding-top: 60px; }
+    .sidebar { position: fixed; top: 0; left: 0; height: 100%; width: 200px; background: #343a40; color: white; padding-top: 20px; }
+    .sidebar a { color: white; display: block; padding: 10px; text-decoration: none; }
+    .sidebar a:hover { background: #495057; }
+    .main { margin-left: 220px; padding: 20px; }
+    table img { max-width: 100px; }
+  </style>
 </head>
 <body>
-  <header class="app-header">
-    <h1>⚙️ Component Life</h1>
-    <nav class="tabs">
-      <button class="tab-btn active" data-tab="compLife">Comp‑Life</button>
-      <button class="tab-btn" data-tab="currentSMU">Current SMU</button>
-    </nav>
-  </header>
+  <div class="sidebar">
+    <="text-center">Menu</h4>
+    <a href="#" onclick="showMenu('compLife')">Comp-Life</a>
+    <a href="#" onclick="showMenu('currentSMU')">Current SMU</a>
+  </div>
 
-  <main class="container">
-    <!-- ===================== Comp-Life ===================== -->
-    <section id="compLife" class="tab-page active">
-      <div class="card">
-        <div class="card-header">
-          <h2>📊 Component Life</h2>
-          <button id="btnAddNew" class="btn primary">+ Add New</button>
+  <div class="main">
+    <div id="compLife">
+      <h2>Comp-Life</h2>
+      <form id="addForm">
+        <!-- Input fields for Equip, Model, Component, etc. -->
+        <div class="row">
+          <div class="col"><input type="text" class="form-control" placeholder="Equip" name="equip" /></div>
+          <div class="col"><input type="text" class="form-control" placeholder="Model" name="model" /></div>
+          <div class="col"><input type="text" class="form-control" placeholder="Component" name="component" /></div>
         </div>
-        <div class="filters">
-          <select id="filterEquip"><option value="">Equip (All)</option></select>
-          <select id="filterModel"><option value="">Model (All)</option></select>
-          <select id="filterComponent"><option value="">Component (All)</option></select>
-          <button id="btnApplyFilter" class="btn">Filter</button>
-          <button id="btnClearFilter" class="btn ghost">Clear</button>
+        <div class="row mt-2">
+          <div class="col"><input type="number" class="form-control" placeholder="Freq" name="freq" /></div>
+          <div class="col"><input type="number" class="form-control" placeholder="Cost" name="cost" /></div>
+          <div class="col"><input type="text" class="form-control" placeholder="Change Out" name="changeOut" /></div>
         </div>
-        <div class="table-wrap">
-          <table class="data-table" id="compTable">
-            <thead>
-              <tr>
-                <th>Equip</th>
-                <th>Model</th>
-                <th>Component</th>
-                <th>Freq</th>
-                <th>Cost</th>
-                <th>Change Out</th>
-                <th>Next Change</th>
-                <th>SMU</th>
-                <th>Life</th>
-                <th>%</th>
-                <th>Rating</th>
-                <th>Remarks</th>
-                <th>Picture</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="compTbody"></tbody>
-          </table>
+        <div class="row mt-2">
+          <div class="col"><input type="text" class="form-control" placeholder="Next Change" name="nextChange" /></div>
+          <div class="col"><input type="number" class="form-control" placeholder="SMU" name="smu" /></div>
+          <div class="col"><input type="number" class="form-control" placeholder="Life %" name="life" /></div>
         </div>
-      </div>
-    </section>
+        <div class="row mt-2">
+          <div class="col"><input type="text" class="form-control" placeholder="Rating" name="rating" /></div>
+          <div class="col"><input type="text" class="form-control" placeholder="Remarks" name="remarks" /></div>
+          <div class="col"><input type="file" class="form-control" name="picture" accept="image/*" /></div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Add New</button>
+      </form>
 
-    <!-- ===================== Current SMU ===================== -->
-    <section id="currentSMU" class="tab-page">
-      <div class="card">
-        <div class="card-header">
-          <h2>⏱️ Current SMU (Mass Update)</h2>
-        </div>
-        <p class="muted">Format: <code>Equip,SMU</code> per baris. Contoh: <code>DT001,3456</code></p>
-        <textarea id="smuBulk" rows="8" placeholder="DT001,3456\nDT002,1200\n..."></textarea>
-        <div class="row actions">
-          <button id="btnPreviewBulk" class="btn">Preview</button>
-          <button id="btnApplyBulk" class="btn primary">Apply Update</button>
-        </div>
-        <div id="bulkResult" class="muted"></div>
-      </div>
-    </section>
-  </main>
+      <hr />
+      <h4>Filter</h4>
+      <input type="text" id="filterInput" class="form-control mb-3" placeholder="Filter by Equip or Component" />
 
-  <!-- ===== Modal Form Add/Edit ===== -->
-  <div id="modalForm" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h3 id="modalTitle">Add / Edit Component</h3>
-      <form id="componentForm">
-        <div class="form-grid">
-          <input id="formEquip" placeholder="Equip" required />
-          <input id="formModel" placeholder="Model" />
-          <input id="formComponent" placeholder="Component" required />
-          <input id="formFreq" type="number" min="0" placeholder="Freq" />
-          <input id="formCost" type="number" min="0" step="0.01" placeholder="Cost" />
-          <input id="formChangeOut" type="date" placeholder="Change Out" />
-          <input id="formSMU" type="number" min="0" placeholder="SMU" />
-          <input id="formLife" type="number" min="0" placeholder="Life" readonly />
-          <input id="formPct" type="number" min="0" max="100" placeholder="%" readonly />
-          <select id="formRating">
-            <option value="">-</option>
-            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-          </select>
-          <input id="formRemarks" placeholder="Remarks" />
-          <label class="upload-btn">
-            <input id="formPicture" type="file" accept="image/*" />
-            Upload Picture
-          </label>
-        </div>
-        <button type="submit" class="btn primary" id="btnSave">Save</button>
+      <table class="table table-bordered" id="dataTable">
+        <thead>
+          <tr>
+            <th>Equip</th><th>Model</th><th>Component</th><th>Freq</th><th>Cost</th><th>Change Out</th>
+            <th>Next Change</th><th>SMU</th><th>Life %</th><th>Rating</th><th>Remarks</th><th>Picture</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div id="currentSMU" style="display:none;">
+      <h2>Current SMU</h2>
+      <form id="smuForm">
+        <input type="text" class="form-control mb-2" placeholder="Equip" name="equip" />
+        <input type="number" class="form-control mb-2" placeholder="New SMU" name="smu" />
+        <button type="submit" class="btn btn-success">Update SMU</button>
       </form>
     </div>
   </div>
 
-  <script type="module" src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
-
