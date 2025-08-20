@@ -19,12 +19,13 @@ import {
 
 // Konfigurasi Firebase
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
+  apiKey: "AIzaSyAHQFyRifcuYJYGuiQaK9vvWJpYGfoDdmI",
   authDomain: "component-life.firebaseapp.com",
   projectId: "component-life",
   storageBucket: "component-life.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:xxxxxxx",
+  messagingSenderId: "401190574281",
+  appId: "1:401190574281:web:16c2401b5bda146779d518",
+  measurementId: "G-77WF4LVS25"
 };
 
 // Init Firebase
@@ -159,3 +160,4 @@ document.querySelector("#filter-input")?.addEventListener("input", async (e) => 
 document.addEventListener("DOMContentLoaded", () => {
   loadData();
 });
+
