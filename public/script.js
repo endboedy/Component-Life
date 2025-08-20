@@ -27,8 +27,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
-
+const storage = getStorage(app)
+  
 // ===== DOM Refs =====
 const tbody = document.getElementById('compTbody');
 const filterEquip = document.getElementById('filterEquip');
@@ -62,10 +62,23 @@ let editId = null;
 let allDocs = [];
 const col = collection(db, 'components');
 
+
 // ===== Tunggu DOM siap =====
 document.addEventListener('DOMContentLoaded', () => {
-  // semua kode manipulasi DOM, event listener, modal, tabel, filter, dll
+  // Semua kode manipulasi DOM, event listener, modal, tabel, filter, dll
+  // Contoh:
+  const tabs = document.querySelectorAll('.tab-btn');
+  const pages = document.querySelectorAll('.tab-page');
+  tabs.forEach(btn => btn.addEventListener('click', () => {
+    tabs.forEach(b => b.classList.remove('active'));
+    pages.forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  }));
+
+  // Tambahkan semua event listener dan manipulasi DOM lainnya di sini
 });
+
 
   // ===== Helpers =====
   const fmtMoney = v => v != null ? `$${Number(v).toLocaleString()}` : '-';
@@ -283,5 +296,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
 
 
