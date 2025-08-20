@@ -4,56 +4,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Comp-Life & Current SMU</title>
+  <title>Component Life EM</title>
   https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css
-  <style>
-    body { padding-top: 60px; }
-    .sidebar { position: fixed; top: 0; left: 0; height: 100%; width: 200px; background: #343a40; color: white; padding-top: 20px; }
-    .sidebar a { color: white; display: block; padding: 10px; text-decoration: none; }
-    .sidebar a:hover { background: #495057; }
-    .main { margin-left: 220px; padding: 20px; }
-    table img { max-width: 100px; }
-  </style>
 </head>
 <body>
-  <div class="sidebar">
-    <="text-center">Menu</h4>
-    <a href="#" onclick="showMenu('compLife')">Comp-Life</a>
-    <a href="#" onclick="showMenu('currentSMU')">Current SMU</a>
-  </div>
+  <div class="container mt-4">
+    <h1 class="text-center mb-4">Component Life EM</h1>
 
-  <div class="main">
-    <div id="compLife">
-      <h2>Comp-Life</h2>
-      <form id="addForm">
-        <!-- Input fields for Equip, Model, Component, etc. -->
-        <div class="row">
-          <div class="col"><input type="text" class="form-control" placeholder="Equip" name="equip" /></div>
-          <div class="col"><input type="text" class="form-control" placeholder="Model" name="model" /></div>
-          <div class="col"><input type="text" class="form-control" placeholder="Component" name="component" /></div>
-        </div>
-        <div class="row mt-2">
-          <div class="col"><input type="number" class="form-control" placeholder="Freq" name="freq" /></div>
-          <div class="col"><input type="number" class="form-control" placeholder="Cost" name="cost" /></div>
-          <div class="col"><input type="text" class="form-control" placeholder="Change Out" name="changeOut" /></div>
-        </div>
-        <div class="row mt-2">
-          <div class="col"><input type="text" class="form-control" placeholder="Next Change" name="nextChange" /></div>
-          <div class="col"><input type="number" class="form-control" placeholder="SMU" name="smu" /></div>
-          <div class="col"><input type="number" class="form-control" placeholder="Life %" name="life" /></div>
-        </div>
-        <div class="row mt-2">
-          <div class="col"><input type="text" class="form-control" placeholder="Rating" name="rating" /></div>
-          <div class="col"><input type="text" class="form-control" placeholder="Remarks" name="remarks" /></div>
-          <div class="col"><input type="file" class="form-control" name="picture" accept="image/*" /></div>
-        </div>
-        <button type="submit" class="btn btn-primary mt-3">Add New</button>
-      </form>
+    <ul class="nav nav-tabs" id="mainTabs">
+      <li class="nav-item"><a class="nav-link active" href="#" onclick="showTab('compLife')">Comp-Life</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showTab('currentSMU')">Update Current SMU</a></li>
+    </ul>
 
-      <hr />
-      <h4>Filter</h4>
+    <div id="compLife" class="mt-4">
+      <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addModal">Add New</button>
       <input type="text" id="filterInput" class="form-control mb-3" placeholder="Filter by Equip or Component" />
-
       <table class="table table-bordered" id="dataTable">
         <thead>
           <tr>
@@ -65,8 +30,7 @@
       </table>
     </div>
 
-    <div id="currentSMU" style="display:none;">
-      <h2>Current SMU</h2>
+    <div id="currentSMU" class="mt-4" style="display:none;">
       <form id="smuForm">
         <input type="text" class="form-control mb-2" placeholder="Equip" name="equip" />
         <input type="number" class="form-control mb-2" placeholder="New SMU" name="smu" />
@@ -75,6 +39,38 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <!-- Modal Add New -->
+  <div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <form class="modal-content" id="addForm">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New Component</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-md-4"><input type="text" class="form-control" placeholder="Equip" name="equip" /></div>
+            <div class="col-md-4"><input type="text" class="form-control" placeholder="Model" name="model" /></div>
+            <div class="col-md-4"><input type="text" class="form-control" placeholder="Component" name="component" /></div>
+            <div class="col-md-4"><input type="number" class="form-control" placeholder="Freq" name="freq" /></div>
+            <div class="col-md-4"><input type="number" class="form-control" placeholder="Cost" name="cost" /></div>
+            <div class="col-md-4"><input type="text" class="form-control" placeholder="Change Out" name="changeOut" /></div>
+            <div class="col-md-4"><input type="text" class="form-control" placeholder="Next Change" name="nextChange" /></div>
+           div class="col-md-4"><input type="number" class="form-control" placeholder="SMU" name="smu" /></div>
+            <div class="col-md-4"><input type="number" class="form-control" placeholder="Life %" name="life" /></div>
+            <div class="col-md-4"><input type="text" class="form-control" placeholder="Rating" name="rating" /></div>
+            <div class="col-md-4"><input type="text" class="form-control" placeholder="Remarks" name="remarks" /></div>
+            <div class="col-md-4"><input type="file" class="form-control" name="picture" accept="image/*" /></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js
+  <script src="script.js" type="module"></script>
 </body>
 </html>
