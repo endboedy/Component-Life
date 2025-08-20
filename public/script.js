@@ -82,7 +82,7 @@ async function loadData() {
 // =========================
 // Add Data Baru
 // =========================
-const addBtn = document.querySelector("#add-btn"); // tombol Add New
+const addBtn = document.querySelector("#add-btn");
 
 if (addBtn) {
   addBtn.addEventListener("click", async () => {
@@ -132,4 +132,5 @@ document.querySelector("#filter-input").addEventListener("input", async (e) => {
 // Start Render
 // =========================
 loadData();
+
 
