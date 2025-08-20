@@ -1,4 +1,4 @@
-// --- Firebase Import ---
+/ --- Firebase Import ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
 import { 
   getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc 
@@ -47,16 +47,15 @@ saveBtn.addEventListener("click", async () => {
   let remarks = document.getElementById("remarks").value;
   let fotoFile = document.getElementById("foto").files[0];
 
-  let currentSMU = 0; // default nanti di-update dari menu Current SMU
+  let currentSMU = 0; 
   let nextChange = changeOut + freq;
   let life = currentSMU - changeOut;
   let lifePercent = freq > 0 ? ((life / freq) * 100).toFixed(2) : 0;
 
-  // simpan ke Firestore
   try {
     const docRef = await addDoc(collection(db, "component_life"), {
       equip, model, component, freq, cost, changeOut, 
-      rating, remarks, fotoName: fotoFile ? fotoFile.name : "",
+      rating, remarks, foto: fotoFile ? fotoFile.name : "",
       currentSMU, nextChange, life, lifePercent
     });
 
@@ -65,7 +64,7 @@ saveBtn.addEventListener("click", async () => {
     // tampilkan di tabel
     addRowToTable({ 
       id: docRef.id, equip, model, component, freq, cost, 
-      changeOut, rating, remarks, fotoName: fotoFile ? fotoFile.name : "",
+      changeOut, rating, remarks, foto: fotoFile ? fotoFile.name : "",
       currentSMU, nextChange, life, lifePercent 
     });
 
@@ -81,7 +80,7 @@ saveBtn.addEventListener("click", async () => {
 // fungsi render row ke tabel
 function addRowToTable(data) {
   let row = `
-    <tr>
+    <tr id="row-${data.id}">
       <td>${data.equip}</td>
       <td>${data.model}</td>
       <td>${data.component}</td>
@@ -91,53 +90,26 @@ function addRowToTable(data) {
       <td>${data.nextChange}</td>
       <td class="current-smu">${data.currentSMU}</td>
       <td class="life">${data.life}</td>
-      <td class="lifePct">${data.lifePct}%</td>
+      <td class="lifePct">${data.lifePercent}%</td>
       <td>${data.rating}</td>
       <td>${data.remarks}</td>
       <td>${data.foto ? <img src="${data.foto}" width="50"> : ""}</td>
+      <td>
+        <span class="action-btn" onclick="deleteRow('${data.id}')">Delete</span>
+        <span class="action-btn" onclick="editRow('${data.id}')">Edit</span>
+      </td>
     </tr>
   `;
-  document
-    .getElementById("dataTable")
-    .getElementsByTagName("tbody")[0]
-    .insertAdjacentHTML("beforeend", row);
+  dataTable.getElementsByTagName("tbody")[0].insertAdjacentHTML("beforeend", row);
 }
 
 // --- Load Data from Firestore ---
 async function loadData() {
-  const tableBody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
-  tableBody.innerHTML = ""; // clear
+  const tableBody = dataTable.getElementsByTagName('tbody')[0];
+  tableBody.innerHTML = ""; 
 
-  const snapshot = await getDocs(collection(db, "components"));
+  const snapshot = await getDocs(collection(db, "component_life"));
   snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const row = tableBody.insertRow();
-    row.innerHTML = `
-      <td>${data.equip ?? ""}</td>
-      <td>${data.model ?? ""}</td>
-      <td>${data.component ?? ""}</td>
-      <td>${data.freq ?? ""}</td>
-      <td>${data.cost ?? ""}</td>
-      <td>${data.changeOut ?? ""}</td>
-      <td>${data.nextChange ?? ""}</td>
-      <td class="current-smu">${data.currentSMU ?? ""}</td>
-      <td class="life">${data.life ?? ""}</td>
-      <td class="lifePct">${data.lifePct ?? ""}%</td>
-      <td>${data.rating ?? ""}</td>
-      <td>${data.remarks ?? ""}</td>
-      <td>${data.foto ? <img src="${data.foto}" width="50" alt="foto"> : ""}</td>
-      <td>
-        <span class="action-btn" onclick="deleteRow('${docSnap.id}')">Delete</span>
-      </td>
-    `;
-  });
-}
-loadData();
-
-// load data dari Firestore saat awal
-async function loadData() {
-  const querySnapshot = await getDocs(collection(db, "component_life"));
-  querySnapshot.forEach((docSnap) => {
     addRowToTable({ id: docSnap.id, ...docSnap.data() });
   });
 }
@@ -151,10 +123,7 @@ window.deleteRow = async function(id) {
   }
 };
 
-// fungsi edit (basic, nanti bisa dikembangkan)
+// fungsi edit
 window.editRow = function(id) {
   alert("Edit fungsi untuk ID: " + id + " masih dalam pengembangan");
 };
-
-
-
