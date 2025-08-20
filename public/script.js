@@ -5,21 +5,26 @@
   import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-// 🔥 Firebase Config (punyamu)
-const firebaseConfig = {
-  apiKey: "AIzaSyAHQFyRifcuYJYGuiQaK9vvWJpYGfoDdmI",
-  authDomain: "component-life.firebaseapp.com",
-  projectId: "component-life",
-  storageBucket: "component-life.appspot.com",
-  messagingSenderId: "401190574281",
-  appId: "1:401190574281:web:16c2401b5bda146779d518",
-  measurementId: "G-77WF4LVS25"
-};
+  // Config Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyAHQFyRifcuYJYGuiQaK9vvWJpYGfoDdmI",
+    authDomain: "component-life.firebaseapp.com",
+    projectId: "component-life",
+    storageBucket: "component-life.appspot.com",
+    messagingSenderId: "401190574281",
+    appId: "1:401190574281:web:16c2401b5bda146779d518",
+    measurementId: "G-77WF4LVS25"
+  };
 
-// Init
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
+  // Init Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+
+  // Biar bisa dipakai di script.js
+  window.db = db;
+  window.storage = storage;
+</script>
 
 // Collections
 const COL_LIFE = collection(db, "component_life"); // data baris komponen
@@ -333,4 +338,5 @@ async function saveSMUMass() {
   }
   alert("SMU updated.");
 }
+
 
