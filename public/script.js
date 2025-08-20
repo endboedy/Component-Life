@@ -58,10 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===== Helpers =====
   const fmtMoney = v => v != null ? `${Number(v).toLocaleString()}` : '-';
   const pctBadge = (pct) => {
-    if (pct == null || isNaN(pct)) return '-';
-    if (pct < 60) return `<span class="badge ok">${pct}%</span>`;
-    if (pct < 85) return `<span class="badge warn">${pct}%</span>`;
-    return `<span class="badge danger">${pct}%</span>`;
+    if (pct < 60) return <span class="badge ok">${pct}%</span>;
+    if (pct < 85) return <span class="badge warn">${pct}%</span>;
+    return <span class="badge danger">${pct}%</span>;
   };
 
   function numOrNull(v) {
@@ -294,3 +293,4 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+
