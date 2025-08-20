@@ -1,14 +1,10 @@
 {
-"hosting": [
-{
-"target": "default",
+"hosting": {
 "public": "public",
-"ignore": ["firebase.json","/.*","/node_modules/"]
-},
-{
-"target": "second",
-"public": "public2",
-"ignore": ["firebase.json","/.*","/node_modules/"]
-}
+"ignore": [
+"firebase.json",
+"/.*",
+"/node_modules/**"
 ]
+}
 }
