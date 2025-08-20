@@ -126,22 +126,41 @@ document.addEventListener("change", async (e) => {
 });
 
 // =========================
-// Filter Data (contoh input #filter-input)
+// Filter Data
 // =========================
-document.querySelector("#filter-input").addEventListener("input", async (e) => {
-  const filter = e.target.value.toLowerCase();
-  const tableBody = document.querySelector("#data-table tbody");
+document.querySelector("#filter-equipment").addEventListener("input", filterTable);
+document.querySelector("#filter-model").addEventListener("input", filterTable);
+document.querySelector("#filter-component").addEventListener("input", filterTable);
 
-  for (const row of tableBody.rows) {
-    const equipment = row.querySelector("[data-field='equipment']").innerText.toLowerCase();
-    row.style.display = equipment.includes(filter) ? "" : "none";
-  }
-});
+function filterTable() {
+  const equipmentVal = document.querySelector("#filter-equipment").value.toLowerCase();
+  const modelVal = document.querySelector("#filter-model").value.toLowerCase();
+  const componentVal = document.querySelector("#filter-component").value.toLowerCase();
+
+  const rows = document.querySelectorAll("#component-body tr");
+
+  rows.forEach(row => {
+    const equipment = row.querySelector("td:nth-child(1)")?.textContent.toLowerCase();
+    const model = row.querySelector("td:nth-child(2)")?.textContent.toLowerCase();
+    const component = row.querySelector("td:nth-child(3)")?.textContent.toLowerCase();
+
+    if (
+      equipment.includes(equipmentVal) &&
+      model.includes(modelVal) &&
+      component.includes(componentVal)
+    ) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  });
+}
 
 // =========================
 // Start Render
 // =========================
 loadData();
+
 
 
 
