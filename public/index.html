@@ -6,25 +6,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Component Life EM</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
-  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      background-color: #f4f6f8;
+      font-family: 'Aptos Narrow', sans-serif;
+      font-size: 11pt;
+    }
+    .nav-tabs .nav-link.active {
+      background-color: #e0e0e0;
+    }
+    .table th, .table td {
+      font-weight: normal;
+      vertical-align: middle;
+    }
+    .form-popup {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      padding: 20px;
+      border: 1px solid #ccc;
+      z-index: 1000;
+      width: 90%;
+      max-width: 600px;
+    }
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+    .input-bar {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .input-bar input {
+      flex: 1;
+      min-width: 150px;
+    }
+    .input-bar button {
+      white-space: nowrap;
+    }
+  </style>
 </head>
 <body class="container py-4">
   <h2>Component Life EM</h2>
-
-  <!-- Tabs -->
   <ul class="nav nav-tabs" id="mainTabs">
     <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#compLife">Comp-Life</a></li>
     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#updateSMU">Update Current SMU</a></li>
   </ul>
 
   <div class="tab-content">
-    <!-- Comp-Life Tab -->
     <div class="tab-pane fade show active" id="compLife">
-      <div class="input-bar d-flex flex-wrap gap-2 mt-3">
-        <input class="form-control" id="equip" placeholder="Equip" />
-        <input class="form-control" id="model" placeholder="Model" />
-        <input class="form-control" id="component" placeholder="Component" />
+      <div class="input-bar">
+        <input type="text" id="filterEquip" class="form-control" placeholder="Filter Equip" oninput="filterTable()" />
+        <input type="text" id="filterModel" class="form-control" placeholder="Filter Model" oninput="filterTable()" />
+        <input type="text" id="filterComponent" class="form-control" placeholder="Filter Component" oninput="filterTable()" />
         <button class="btn btn-primary" onclick="openForm()">Add New</button>
       </div>
       <table class="table table-bordered table-striped mt-3">
@@ -38,16 +84,13 @@
       </table>
     </div>
 
-    <!-- Update Current SMU Tab -->
     <div class="tab-pane fade" id="updateSMU">
       <h5 class="mt-3">Update Current SMU (Massal)</h5>
       <textarea id="inputSMU" class="form-control mb-3" rows="5" placeholder="Contoh:
 C02060	17506
 C02072	67719"></textarea>
-      <div class="mb-3">
-        <button class="btn btn-primary" onclick="tampilkanTabel()">Tampilkan Tabel</button>
-        <button class="btn btn-success" onclick="updateFirebaseSMU()">Update Semua ke Firebase</button>
-      </div>
+      <button class="btn btn-primary mb-2" onclick="tampilkanTabel()">Tampilkan Tabel</button>
+      <button class="btn btn-success mb-2" onclick="updateFirebase()">Update Semua ke Firebase</button>
       <table class="table table-bordered table-smu">
         <thead><tr><th>Equipment</th><th>Current SMU</th></tr></thead>
         <tbody id="smuTableBody"></tbody>
@@ -55,63 +98,59 @@ C02072	67719"></textarea>
     </div>
   </div>
 
-  <!-- Form Popup -->
-  <div class="modal fade" id="formModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <form class="modal-content" id="addForm">
-        <div class="modal-header"><h5 class="modal-title">Add New Component</h5></div>
-        <div class="modal-body">
-          <div class="row">
-            <div class="col-md-6"><input class="form-control mb-2" name="freq" type="number" placeholder="Freq" required /></div>
-            <div class="col-md-6"><input class="form-control mb-2" name="cost" type="number" placeholder="Cost" required /></div>
-            <div class="col-md-6"><input class="form-control mb-2" name="changeOut" type="number" placeholder="Change Out" required /></div>
-            <div class="col-md-6"><input class="form-control mb-2" name="rating" placeholder="Rating" /></div>
-            <div class="col-md-12"><input class="form-control mb-2" name="remarks" placeholder="Remarks" /></div>
-            <div class="col-md-12"><input class="form-control mb-2" name="foto" type="file" accept="image/*" /></div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-success">Save</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        </div>
-      </form>
-    </div>
+  <div class="overlay" onclick="closeForm()"></div>
+  <div class="form-popup" id="formPopup">
+    <h5>Add New Component</h5>
+    <form id="addForm">
+      <div class="row">
+        <div class="col-md-6"><input class="form-control mb-2" name="equip" placeholder="Equip" required /></div>
+        <div class="col-md-6"><input class="form-control mb-2" name="model" placeholder="Model" required /></div>
+        <div class="col-md-6"><input class="form-control mb-2" name="component" placeholder="Component" required /></div>
+        <div class="col-md-6"><input class="form-control mb-2" name="freq" type="number" placeholder="Freq" required /></div>
+        <div class="col-md-6"><input class="form-control mb-2" name="cost" type="number" placeholder="Cost" required /></div>
+        <div class="col-md-6"><input class="form-control mb-2" name="changeOut" type="number" placeholder="Change Out" required /></div>
+        <div class="col-md-6"><input class="form-control mb-2" name="rating" placeholder="Rating" /></div>
+        <div class="col-md-6"><input class="form-control mb-2" name="remarks" placeholder="Remarks" /></div>
+        <div class="col-md-12"><input class="form-control mb-2" name="foto" type="file" accept="image/*" /></div>
+      </div>
+      <button type="submit" class="btn btn-success">Save</button>
+      <button type="button" class="btn btn-secondary" onclick="closeForm()">Cancel</button>
+    </form>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Firebase config placeholder
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
+      projectId: "YOUR_PROJECT_ID"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     let currentSMU = {};
 
-    // Load Current SMU from Firebase
-    function loadCurrentSMU() {
-      db.collection("current_smu").get().then(snapshot => {
-        snapshot.forEach(doc => {
-          currentSMU[doc.id] = doc.data().smu;
-        });
+    firebase.firestore().collection("current_smu").get().then(snapshot => {
+      snapshot.forEach(doc => {
+        currentSMU[doc.id] = doc.data().smu;
       });
-    }
-
-    loadCurrentSMU();
+    });
 
     function openForm() {
-      new bootstrap.Modal(document.getElementById('formModal')).show();
+      document.querySelector('.overlay').style.display = 'block';
+      document.querySelector('.form-popup').style.display = 'block';
+    }
+
+    function closeForm() {
+      document.querySelector('.overlay').style.display = 'none';
+      document.querySelector('.form-popup').style.display = 'none';
     }
 
     document.getElementById('addForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      const equip = document.getElementById('equip').value;
-      const model = document.getElementById('model').value;
-      const component = document.getElementById('component').value;
       const form = e.target;
+      const equip = form.equip.value;
+      const model = form.model.value;
+      const component = form.component.value;
       const freq = parseFloat(form.freq.value);
       const cost = parseFloat(form.cost.value);
       const changeOut = parseFloat(form.changeOut.value);
@@ -124,23 +163,62 @@ C02072	67719"></textarea>
       const life = current - changeOut;
       const lifePercent = ((life / freq) * 100).toFixed(1);
 
-      const data = {
-        equip, model, component, freq, cost, changeOut, nextChange,
-        currentSMU: current, life, lifePercent, rating, remarks, foto
-      };
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${equip}</td><td>${model}</td><td>${component}</td><td>${freq}</td><td>${cost}</td><td>${changeOut}</td>
+        <td>${nextChange}</td><td>${current}</td><td>${life}</td><td>${lifePercent}%</td><td>${rating}</td><td>${remarks}</td>
+        <td>${foto}</td>
+        <td>
+          <button class="btn btn-sm btn-warning" onclick="editRow(this)">Edit</button>
+          <button class="btn btn-sm btn-success" onclick="saveRow(this)">Save</button>
+        </td>
+      `;
+      document.getElementById('dataTable').appendChild(row);
 
-      db.collection("component_life").add(data).then(() => {
-        const row = `<tr>
-          <td>${equip}</td><td>${model}</td><td>${component}</td><td>${freq}</td><td>${cost}</td><td>${changeOut}</td>
-          <td>${nextChange}</td><td>${current}</td><td>${life}</td><td>${lifePercent}%</td><td>${rating}</td><td>${remarks}</td>
-          <td>${foto}</td>
-          <td><button class="btn btn-sm btn-warning">Edit</button> <button class="btn btn-sm btn-success">Save</button></td>
-        </tr>`;
-        document.getElementById('dataTable').insertAdjacentHTML('beforeend', row);
-        bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
-        form.reset();
+      db.collection("component_life").add({
+        equip, model, component, freq, cost, changeOut, nextChange, currentSMU: current,
+        life, lifePercent, rating, remarks, foto
       });
+
+      closeForm();
+      form.reset();
     });
+
+    function editRow(btn) {
+      const row = btn.closest('tr');
+      [...row.children].forEach((cell, i) => {
+        if (i < 13) {
+          const val = cell.innerText;
+          cell.innerHTML = `<input class="form-control form-control-sm" value="${val.replace('%','')}" />`;
+        }
+      });
+    }
+
+    function saveRow(btn) {
+      const row = btn.closest('tr');
+      [...row.children].forEach((cell, i) => {
+        if (i < 13) {
+          const input = cell.querySelector('input');
+          if (input) cell.innerText = i === 9 ? `${input.value}%` : input.value;
+        }
+      });
+    }
+
+    function filterTable() {
+      const equipVal = document.getElementById('filterEquip').value.toLowerCase();
+      const modelVal = document.getElementById('filterModel').value.toLowerCase();
+      const compVal = document.getElementById('filterComponent').value.toLowerCase();
+      const rows = document.querySelectorAll('#dataTable tr');
+      rows.forEach(row => {
+        const equipText = row.children[0].textContent.toLowerCase();
+        const modelText = row.children[1].textContent.toLowerCase();
+        const compText = row.children[2].textContent.toLowerCase();
+        const matchEquip = equipText.includes(equipVal);
+        const matchModel = modelText.includes(modelVal);
+        const matchComp = compText.includes(compVal);
+        row.style.display = (matchEquip && matchModel && matchComp) ? '' : 'none';
+      });
+    }
 
     let smuData = [];
 
@@ -161,12 +239,12 @@ C02072	67719"></textarea>
       });
     }
 
-    function updateFirebaseSMU() {
+    function updateFirebase() {
       smuData.forEach(item => {
         db.collection("current_smu").doc(item.equip).set({ smu: item.smu });
+        currentSMU[item.equip] = item.smu;
       });
-      alert("Data SMU berhasil diupdate ke Firebase.");
-      loadCurrentSMU();
+      alert("Data berhasil diupdate ke Firebase.");
     }
   </script>
 </body>
