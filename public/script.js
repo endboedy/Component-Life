@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-
   // ===== Tabs =====
   const tabs = document.querySelectorAll('.tab-btn');
   const pages = document.querySelectorAll('.tab-page');
@@ -10,75 +9,55 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(btn.dataset.tab).classList.add('active');
   }));
 
-// ===== Firebase SDK (top-level import) =====
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+  // ===== Firebase SDK (top-level import) =====
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-// ===== Firebase config =====
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "component-life.firebaseapp.com",
-  projectId: "component-life",
-  storageBucket: "component-life.appspot.com",
-  messagingSenderId: "",
-  appId: ""
-};
+  // ===== Firebase config =====
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "component-life.firebaseapp.com",
+    projectId: "component-life",
+    storageBucket: "component-life.appspot.com",
+    messagingSenderId: "",
+    appId: ""
+  };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app)
-  
-// ===== DOM Refs =====
-const tbody = document.getElementById('compTbody');
-const filterEquip = document.getElementById('filterEquip');
-const filterModel = document.getElementById('filterModel');
-const filterComponent = document.getElementById('filterComponent');
-const btnApplyFilter = document.getElementById('btnApplyFilter');
-const btnClearFilter = document.getElementById('btnClearFilter');
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
 
-const btnAddNew = document.getElementById('btnAddNew');
-const modal = document.getElementById('modalForm');
-const spanClose = modal.querySelector('.close');
-const form = document.getElementById('componentForm');
-const modalTitle = document.getElementById('modalTitle');
+  // ===== DOM Refs =====
+  const tbody = document.getElementById('compTbody');
+  const filterEquip = document.getElementById('filterEquip');
+  const filterModel = document.getElementById('filterModel');
+  const filterComponent = document.getElementById('filterComponent');
+  const btnApplyFilter = document.getElementById('btnApplyFilter');
+  const btnClearFilter = document.getElementById('btnClearFilter');
+  const btnAddNew = document.getElementById('btnAddNew');
+  const modal = document.getElementById('modalForm');
+  const spanClose = modal.querySelector('.close');
+  const form = document.getElementById('componentForm');
+  const modalTitle = document.getElementById('modalTitle');
+  const inputs = {
+    equip: document.getElementById('formEquip'),
+    model: document.getElementById('formModel'),
+    component: document.getElementById('formComponent'),
+    freq: document.getElementById('formFreq'),
+    cost: document.getElementById('formCost'),
+    changeOut: document.getElementById('formChangeOut'),
+    smu: document.getElementById('formSMU'),
+    life: document.getElementById('formLife'),
+    pct: document.getElementById('formPct'),
+    rating: document.getElementById('formRating'),
+    remarks: document.getElementById('formRemarks'),
+    picture: document.getElementById('formPicture')
+  };
 
-const inputs = {
-  equip: document.getElementById('formEquip'),
-  model: document.getElementById('formModel'),
-  component: document.getElementById('formComponent'),
-  freq: document.getElementById('formFreq'),
-  cost: document.getElementById('formCost'),
-  changeOut: document.getElementById('formChangeOut'),
-  smu: document.getElementById('formSMU'),
-  life: document.getElementById('formLife'),
-  pct: document.getElementById('formPct'),
-  rating: document.getElementById('formRating'),
-  remarks: document.getElementById('formRemarks'),
-  picture: document.getElementById('formPicture')
-};
-
-let editId = null;
-let allDocs = [];
-const col = collection(db, 'components');
-
-
-// ===== Tunggu DOM siap =====
-document.addEventListener('DOMContentLoaded', () => {
-  // Semua kode manipulasi DOM, event listener, modal, tabel, filter, dll
-  // Contoh:
-  const tabs = document.querySelectorAll('.tab-btn');
-  const pages = document.querySelectorAll('.tab-page');
-  tabs.forEach(btn => btn.addEventListener('click', () => {
-    tabs.forEach(b => b.classList.remove('active'));
-    pages.forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab).classList.add('active');
-  }));
-
-  // Tambahkan semua event listener dan manipulasi DOM lainnya di sini
-});
-
+  let editId = null;
+  let allDocs = [];
+  const col = collection(db, 'components');
 
   // ===== Helpers =====
   const fmtMoney = v => v != null ? `$${Number(v).toLocaleString()}` : '-';
@@ -88,8 +67,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pct < 85) return `<span class="badge warn">${pct}%</span>`;
     return `<span class="badge danger">${pct}%</span>`;
   };
-  function numOrNull(v){ const n = Number(v); return isNaN(n)||v===''?null:n; }
-  function esc(s){ return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+  function numOrNull(v) {
+    const n = Number(v);
+    return isNaN(n) || v === '' ? null : n;
+  }
+
+  function esc(s) {
+    return String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+  }
 
   // ===== Fetch Firestore =====
   onSnapshot(query(col, orderBy('equip')), snap => {
@@ -296,6 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
 
 
 
