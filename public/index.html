@@ -42,6 +42,28 @@
       color: red;
       cursor: pointer;
     }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      width: 50%;
+      border-radius: 6px;
+    }
+    .modal-content input {
+      width: 95%;
+      padding: 5px;
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 <body>
@@ -55,7 +77,7 @@
   </div>
 
   <!-- Add New Button -->
-  <button onclick="addNew()">+ Add New</button>
+  <button onclick="openForm()">+ Add New</button>
 
   <!-- Data Table -->
   <table id="dataTable">
@@ -80,71 +102,32 @@
     <tbody></tbody>
   </table>
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    // Import Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  <!-- Modal Form -->
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <h3>Add Component</h3>
+      <form id="addForm">
+        <input type="text" id="equip" placeholder="Equip" required>
+        <input type="text" id="model" placeholder="Model">
+        <input type="text" id="component" placeholder="Component">
+        <input type="text" id="freq" placeholder="Freq">
+        <input type="number" id="cost" placeholder="Cost">
+        <input type="text" id="changeOut" placeholder="Change Out">
+        <input type="text" id="nextChange" placeholder="Next Change">
+        <input type="number" id="currentSMU" placeholder="Current SMU">
+        <input type="number" id="life" placeholder="Life">
+        <input type="number" id="lifePct" placeholder="Life %">
+        <input type="text" id="rating" placeholder="Rating">
+        <input type="text" id="remarks" placeholder="Remarks">
+        <input type="text" id="foto" placeholder="Foto URL">
+        <br>
+        <button type="submit">Save</button>
+        <button type="button" onclick="closeForm()">Cancel</button>
+      </form>
+    </div>
+  </div>
 
-    // TODO: ganti pakai config project Firebase-mu
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "SENDER_ID",
-      appId: "APP_ID"
-    };
-
-    // Init Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // Load Data
-    async function loadData() {
-      const tableBody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
-      tableBody.innerHTML = ""; // clear dulu
-
-      const snapshot = await getDocs(collection(db, "components"));
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const row = tableBody.insertRow();
-        row.innerHTML = `
-          <td>${data.equip || ""}</td>
-          <td>${data.model || ""}</td>
-          <td>${data.component || ""}</td>
-          <td>${data.freq || ""}</td>
-          <td>${data.cost || ""}</td>
-          <td>${data.changeOut || ""}</td>
-          <td>${data.nextChange || ""}</td>
-          <td class="current-smu">${data.currentSMU || ""}</td>
-          <td class="life">${data.life || ""}</td>
-          <td class="lifePct">${data.lifePct ? data.lifePct + "%" : ""}</td>
-          <td>${data.rating || ""}</td>
-          <td>${data.remarks || ""}</td>
-          <td>${data.foto ? <img src="${data.foto}" width="50"> : ""}</td>
-          <td>
-            <span class="action-btn" onclick="deleteRow('${docSnap.id}')">Delete</span>
-          </td>
-        `;
-      });
-    }
-
-    // Delete Row
-    window.deleteRow = async function(id) {
-      if (confirm("Yakin mau hapus data ini?")) {
-        await deleteDoc(doc(db, "components", id));
-        loadData();
-      }
-    };
-
-    // Add New
-    window.addNew = function() {
-      alert("Fungsi Add New bisa ditambahkan di sini (form input)!");
-    };
-
-    // Initial Load
-    loadData();
-  </script>
+  <!-- Script -->
+  <script type="module" src="script.js"></script>
 </body>
 </html>
