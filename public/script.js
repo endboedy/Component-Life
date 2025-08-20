@@ -1,133 +1,97 @@
-/ --- Firebase Import ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-import { 
-  getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc 
-} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+// Import Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// === Firebase Config (ganti sesuai project kamu) ===
+// 🔹 Ganti config sesuai project Firebase-mu
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
   projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "XXXXXXX",
-  appId: "YOUR_APP_ID"
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
 };
 
 // Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// === DOM Element ===
-const addNewBtn = document.getElementById("addNewBtn");
-const formContainer = document.getElementById("formContainer");
-const saveBtn = document.getElementById("saveBtn");
-const cancelBtn = document.getElementById("cancelBtn");
-const dataTable = document.getElementById("dataTable");
-
-// tampilkan form
-addNewBtn.addEventListener("click", () => {
-  formContainer.classList.remove("hidden");
-});
-
-// cancel form
-cancelBtn.addEventListener("click", () => {
-  formContainer.classList.add("hidden");
-});
-
-// save data
-saveBtn.addEventListener("click", async () => {
-  let equip = document.getElementById("equip").value;
-  let model = document.getElementById("model").value;
-  let component = document.getElementById("component").value;
-  let freq = parseInt(document.getElementById("freq").value) || 0;
-  let cost = parseFloat(document.getElementById("cost").value) || 0;
-  let changeOut = parseInt(document.getElementById("changeOut").value) || 0;
-  let rating = document.getElementById("rating").value;
-  let remarks = document.getElementById("remarks").value;
-  let fotoFile = document.getElementById("foto").files[0];
-
-  let currentSMU = 0; 
-  let nextChange = changeOut + freq;
-  let life = currentSMU - changeOut;
-  let lifePercent = freq > 0 ? ((life / freq) * 100).toFixed(2) : 0;
+// Load Data
+async function loadData() {
+  const tableBody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+  tableBody.innerHTML = ""; // bersihkan isi tabel
 
   try {
-    const docRef = await addDoc(collection(db, "component_life"), {
-      equip, model, component, freq, cost, changeOut, 
-      rating, remarks, foto: fotoFile ? fotoFile.name : "",
-      currentSMU, nextChange, life, lifePercent
+    const snapshot = await getDocs(collection(db, "components"));
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const row = tableBody.insertRow();
+      row.innerHTML = `
+        <td>${data.equip || ""}</td>
+        <td>${data.model || ""}</td>
+        <td>${data.component || ""}</td>
+        <td>${data.freq || ""}</td>
+        <td>${data.cost || ""}</td>
+        <td>${data.changeOut || ""}</td>
+        <td>${data.nextChange || ""}</td>
+        <td>${data.currentSMU || ""}</td>
+        <td>${data.life || ""}</td>
+        <td>${data.lifePct ? data.lifePct + "%" : ""}</td>
+        <td>${data.rating || ""}</td>
+        <td>${data.remarks || ""}</td>
+        <td>${data.foto ? <img src="${data.foto}" width="50"> : ""}</td>
+        <td>
+          <span class="action-btn" onclick="deleteRow('${docSnap.id}')">Delete</span>
+        </td>
+      `;
     });
+  } catch (err) {
+    console.error("Error load data:", err);
+  }
+}
 
-    console.log("Data tersimpan dengan ID:", docRef.id);
+// Delete Row
+window.deleteRow = async function(id) {
+  if (confirm("Yakin mau hapus data ini?")) {
+    await deleteDoc(doc(db, "components", id));
+    loadData();
+  }
+};
 
-    // tampilkan di tabel
-    addRowToTable({ 
-      id: docRef.id, equip, model, component, freq, cost, 
-      changeOut, rating, remarks, foto: fotoFile ? fotoFile.name : "",
-      currentSMU, nextChange, life, lifePercent 
+// Open & Close Modal
+window.openForm = function() {
+  document.getElementById("myModal").style.display = "block";
+}
+window.closeForm = function() {
+  document.getElementById("myModal").style.display = "none";
+  document.getElementById("addForm").reset();
+}
+
+// Add New Data
+document.getElementById("addForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try {
+    await addDoc(collection(db, "components"), {
+      equip: document.getElementById("equip").value,
+      model: document.getElementById("model").value,
+      component: document.getElementById("component").value,
+      freq: document.getElementById("freq").value,
+      cost: parseFloat(document.getElementById("cost").value) || 0,
+      changeOut: document.getElementById("changeOut").value,
+      nextChange: document.getElementById("nextChange").value,
+      currentSMU: parseInt(document.getElementById("currentSMU").value) || 0,
+      life: parseInt(document.getElementById("life").value) || 0,
+      lifePct: parseInt(document.getElementById("lifePct").value) || 0,
+      rating: document.getElementById("rating").value,
+      remarks: document.getElementById("remarks").value,
+      foto: document.getElementById("foto").value
     });
-
-    // reset form
-    formContainer.classList.add("hidden");
-    document.querySelectorAll("#formContainer input, #formContainer select").forEach(el => el.value = "");
-
-  } catch (e) {
-    console.error("Error saat simpan:", e);
+    closeForm();
+    loadData();
+  } catch (err) {
+    console.error("Error add data:", err);
   }
 });
 
-// fungsi render row ke tabel
-function addRowToTable(data) {
-  let row = `
-    <tr id="row-${data.id}">
-       <td>${data.equip}</td>
-  <td>${data.model}</td>
-  <td>${data.component}</td>
-  <td>${data.freq}</td>
-  <td>${data.cost}</td>
-  <td>${data.changeOut}</td>
-  <td>${data.nextChange}</td>
-  <td class="current-smu">${data.currentSMU}</td>
-  <td class="life">${data.life}</td>
-  <td class="lifePct">${data.lifePct}%</td>
-  <td>${data.rating}</td>
-  <td>${data.remarks}</td>
-  <td>${data.foto ? <img src="${data.foto}" width="50"> : ""}</td>
-  <td>
-    <span class="action-btn" onclick="deleteRow('${docSnap.id}')">Delete</span>
-  </td>
-`;
-        <span class="action-btn" onclick="deleteRow('${data.id}')">Delete</span>
-        <span class="action-btn" onclick="editRow('${data.id}')">Edit</span>
-      </td>
-    </tr>
-  `;
-  dataTable.getElementsByTagName("tbody")[0].insertAdjacentHTML("beforeend", row);
-}
-
-// --- Load Data from Firestore ---
-async function loadData() {
-  const tableBody = dataTable.getElementsByTagName('tbody')[0];
-  tableBody.innerHTML = ""; 
-
-  const snapshot = await getDocs(collection(db, "component_life"));
-  snapshot.forEach(docSnap => {
-    addRowToTable({ id: docSnap.id, ...docSnap.data() });
-  });
-}
+// Initial Load
 loadData();
-
-// fungsi delete
-window.deleteRow = async function(id) {
-  if (confirm("Yakin hapus data ini?")) {
-    await deleteDoc(doc(db, "component_life", id));
-    document.getElementById(row-${id}).remove();
-  }
-};
-
-// fungsi edit
-window.editRow = function(id) {
-  alert("Edit fungsi untuk ID: " + id + " masih dalam pengembangan");
-};
-
