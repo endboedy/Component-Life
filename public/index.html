@@ -1,76 +1,74 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>Component Life EM</title>
-  https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container mt-4">
-    <h1 class="text-center mb-4">Component Life EM</h1>
+  <header>Component Life EM</header>
 
-    <ul class="nav nav-tabs" id="mainTabs">
-      <li class="nav-item"><a class="nav-link active" href="#" onclick="showTab('compLife')">Comp-Life</a></li>
-      <li class="nav-item"><a class="nav-link" href="#" onclick="showTab('currentSMU')">Update Current SMU</a></li>
-    </ul>
+  <nav>
+    <button onclick="showPage('compLife')">Comp-Life</button>
+    <button onclick="showPage('updateSMU')">Update Current SMU</button>
+  </nav>
 
-    <div id="compLife" class="mt-4">
-      <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addModal">Add New</button>
-      <input type="text" id="filterInput" class="form-control mb-3" placeholder="Filter by Equip or Component" />
-      <table class="table table-bordered" id="dataTable">
-        <thead>
-          <tr>
-            <th>Equip</th><th>Model</th><th>Component</th><th>Freq</th><th>Cost</th><th>Change Out</th>
-            <th>Next Change</th><th>SMU</th><th>Life %</th><th>Rating</th><th>Remarks</th><th>Picture</th><th>Action</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+  <!-- Menu 1: Comp-Life -->
+  <div id="compLife" class="page">
+    <div class="form-section">
+      <div><label>Equip</label><input type="text" id="equip"></div>
+      <div><label>Model</label><input type="text" id="model"></div>
+      <div><label>Component</label><input type="text" id="component"></div>
+      <div><label>Freq</label><input type="number" id="freq"></div>
+      <div><label>Cost</label><input type="number" id="cost"></div>
+      <div><label>Change Out</label><input type="number" id="changeOut"></div>
+      <div><label>Rating</label>
+        <select id="rating">
+          <option value="">--Select--</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="D">D</option>
+          <option value="X">X</option>
+        </select>
+      </div>
+      <div><label>Remarks</label><input type="text" id="remarks"></div>
+      <div><label>Foto</label><input type="file" id="foto"></div>
+      <button onclick="addRow()">Add New</button>
     </div>
 
-    <div id="currentSMU" class="mt-4" style="display:none;">
-      <form id="smuForm">
-        <input type="text" class="form-control mb-2" placeholder="Equip" name="equip" />
-        <input type="number" class="form-control mb-2" placeholder="New SMU" name="smu" />
-        <button type="submit" class="btn btn-success">Update SMU</button>
-      </form>
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Equip</th>
+          <th>Model</th>
+          <th>Component</th>
+          <th>Freq</th>
+          <th>Cost</th>
+          <th>Change Out</th>
+          <th>Next Change</th>
+          <th>Current SMU</th>
+          <th>Life</th>
+          <th>Life %</th>
+          <th>Rating</th>
+          <th>Remarks</th>
+          <th>Foto</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Menu 2: Update Current SMU -->
+  <div id="updateSMU" class="page" style="display:none;">
+    <div class="form-section">
+      <div><label>Equip</label><input type="text" id="updateEquip"></div>
+      <div><label>Current SMU</label><input type="number" id="updateSMUValue"></div>
+      <button onclick="updateSMU()">Update</button>
     </div>
   </div>
 
-  <!-- Modal Add New -->
-  <div class="modal fade" id="addModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <form class="modal-content" id="addForm">
-        <div class="modal-header">
-          <h5 class="modal-title">Add New Component</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row g-2">
-            <div class="col-md-4"><input type="text" class="form-control" placeholder="Equip" name="equip" /></div>
-            <div class="col-md-4"><input type="text" class="form-control" placeholder="Model" name="model" /></div>
-            <div class="col-md-4"><input type="text" class="form-control" placeholder="Component" name="component" /></div>
-            <div class="col-md-4"><input type="number" class="form-control" placeholder="Freq" name="freq" /></div>
-            <div class="col-md-4"><input type="number" class="form-control" placeholder="Cost" name="cost" /></div>
-            <div class="col-md-4"><input type="text" class="form-control" placeholder="Change Out" name="changeOut" /></div>
-            <div class="col-md-4"><input type="text" class="form-control" placeholder="Next Change" name="nextChange" /></div>
-           div class="col-md-4"><input type="number" class="form-control" placeholder="SMU" name="smu" /></div>
-            <div class="col-md-4"><input type="number" class="form-control" placeholder="Life %" name="life" /></div>
-            <div class="col-md-4"><input type="text" class="form-control" placeholder="Rating" name="rating" /></div>
-            <div class="col-md-4"><input type="text" class="form-control" placeholder="Remarks" name="remarks" /></div>
-            <div class="col-md-4"><input type="file" class="form-control" name="picture" accept="image/*" /></div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Save</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js
-  <script src="script.js" type="module"></script>
+  <script src="script.js"></script>
 </body>
 </html>
