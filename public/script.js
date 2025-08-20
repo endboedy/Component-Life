@@ -1,284 +1,89 @@
 
-// script.js (modular Firebase SDK)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
+import {
+  getFirestore, collection, addDoc, getDocs, updateDoc, doc, query, where
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
 
-document.addEventListener('DOMContentLoaded', () => {
-  // ===== Tabs =====
-  const tabs = document.querySelectorAll('.tab-btn');
-  const pages = document.querySelectorAll('.tab-page');
-  tabs.forEach(btn => btn.addEventListener('click', () => {
-    tabs.forEach(b => b.classList.remove('active'));
-    pages.forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab).classList.add('active');
-  }));
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
 
-  // ===== Firebase config =====
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "component-life.firebaseapp.com",
-    projectId: "component-life",
-    storageBucket: "component-life.appspot.com",
-    messagingSenderId: "",
-    appId: ""
-  };
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-  // Inisialisasi Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const storage = getStorage(app);
+function showMenu(menu) {
+  document.getElementById("compLife").style.display = menu === "compLife" ? "block" : "none";
+  document.getElementById("currentSMU").style.display = menu === "currentSMU" ? "block" : "none";
+}
 
-  // ===== DOM Refs =====
-  const tbody = document.getElementById('compTbody');
-  const filterEquip = document.getElementById('filterEquip');
-  const filterModel = document.getElementById('filterModel');
-  const filterComponent = document.getElementById('filterComponent');
-  const btnApplyFilter = document.getElementById('btnApplyFilter');
-  const btnClearFilter = document.getElementById('btnClearFilter');
-  const btnAddNew = document.getElementById('btnAddNew');
-  const modal = document.getElementById('modalForm');
-  const spanClose = modal.querySelector('.close');
-  const form = document.getElementById('componentForm');
-  const modalTitle = document.getElementById('modalTitle');
-  const inputs = {
-    equip: document.getElementById('formEquip'),
-    model: document.getElementById('formModel'),
-    component: document.getElementById('formComponent'),
-    freq: document.getElementById('formFreq'),
-    cost: document.getElementById('formCost'),
-    changeOut: document.getElementById('formChangeOut'),
-    smu: document.getElementById('formSMU'),
-    life: document.getElementById('formLife'),
-    pct: document.getElementById('formPct'),
-    rating: document.getElementById('formRating'),
-    remarks: document.getElementById('formRemarks'),
-    picture: document.getElementById('formPicture')
-  };
+document.getElementById("addForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form));
+  const file = form.picture.files[0];
 
-  let editId = null;
-  let allDocs = [];
-
-  // ===== Helpers =====
-  const fmtMoney = v => (v != null) ? `${Number(v).toLocaleString()}` : '-';
-  const esc = s => (s != null) ? String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
-  const pctBadge = (pct) => {
-    if (pct == null || isNaN(pct)) return '-';
-    if (pct < 60) return `<span class="badge ok">${pct}%</span>`;
-    if (pct < 85) return `<span class="badge warn">${pct}%</span>`;
-    return `<span class="badge danger">${pct}%</span>`;
-  };
-
-  function populateFilters(rows) {
-    const uniq = arr => Array.from(new Set(arr.filter(Boolean)));
-    const equips = uniq(rows.map(r => r.equip));
-    const models = uniq(rows.map(r => r.model));
-    const comps = uniq(rows.map(r => r.component));
-    filterEquip.innerHTML = `<option value="">Equip (All)</option>` + equips.map(e => `<option>${e}</option>`).join('');
-    filterModel.innerHTML = `<option value="">Model (All)</option>` + models.map(m => `<option>${m}</option>`).join('');
-    filterComponent.innerHTML = `<option value="">Component (All)</option>` + comps.map(c => `<option>${c}</option>`).join('');
+  let imageUrl = "";
+  if (file) {
+    const storageRef = ref(storage, `images/${Date.now()}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    imageUrl = await getDownloadURL(storageRef);
   }
 
-  function applyFilter(rows) {
-    const e = filterEquip.value,
-          m = filterModel.value,
-          c = filterComponent.value;
-    return rows.filter(r =>
-      (!e || r.equip === e) &&
-      (!m || r.model === m) &&
-      (!c || r.component === c)
-    );
-  }
-
-  function computeNextChange(r){
-    if(!r.freq || !r.changeOut) return null;
-    const co = new Date(r.changeOut);
-    co.setDate(co.getDate() + Number(r.freq));
-    return co.toISOString().slice(0,10);
-  }
-
-  function computeLife(r){
-    if(!r.smu || !r.changeOut) return null;
-    const daysSinceChange = Math.floor((Date.now() - new Date(r.changeOut)) / 86400000);
-    return Number(r.smu) - daysSinceChange;
-  }
-
-  function computePct(life,freq){
-    if(!life || !freq) return null;
-    return Math.round(life/freq*100);
-  }
-
-  function renderTable() {
-    const rows = applyFilter(allDocs);
-    tbody.innerHTML = rows.map(r => {
-      const nextChange = computeNextChange(r);
-      const life = computeLife(r);
-      const pct = computePct(life, r.freq);
-      const rating = (typeof r.rating === 'number' && r.rating > 0) ? '⭐'.repeat(r.rating) : '-';
-      const pic = r.pictureUrl ? `<a href="${r.pictureUrl}" target="_blank"><img class="thumb" src="${r.pictureUrl}"/></a>` : '-';
-      const remarks = r.remarks || "";
-      return `<tr data-id="${r.id}">
-        <td>${esc(r.equip)}</td>
-        <td>${esc(r.model)}</td>
-        <td>${esc(r.component)}</td>
-        <td>${r.freq||''}</td>
-        <td>${fmtMoney(r.cost)}</td>
-        <td>${r.changeOut||''}</td>
-        <td>${nextChange||''}</td>
-        <td>${r.smu||''}</td>
-        <td>${life||''}</td>
-        <td>${pctBadge(pct)}</td>
-        <td>${rating}</td>
-        <td title="${esc(remarks)}">${esc(remarks).slice(0,18)}${remarks.length>18?'…':''}</td>
-        <td>${pic}</td>
-        <td>
-          <button class="action-btn edit">✏️</button>
-          <button class="action-btn del">🗑️</button>
-        </td>
-      </tr>`;
-    }).join('');
-    attachRowEvents();
-  }
-
-  function attachRowEvents(){
-    tbody.querySelectorAll('.edit').forEach(btn=>btn.addEventListener('click', onEdit));
-    tbody.querySelectorAll('.del').forEach(btn=>btn.addEventListener('click', onDelete));
-  }
-
-  const colRef = collection(db, 'components');
-  const q = query(colRef, orderBy('equip'));
-  onSnapshot(q, (snap) => {
-    allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    populateFilters(allDocs);
-    renderTable();
-  });
-
-  btnAddNew.addEventListener('click', () => {
-    editId = null;
-    modalTitle.textContent = 'Add Component';
-    form.reset();
-    inputs.life.value = '';
-    inputs.pct.value = '';
-    modal.style.display = 'block';
-  });
-
-  spanClose.addEventListener('click', () => modal.style.display = 'none');
-  window.addEventListener('click', e => {
-    if (e.target===modal) modal.style.display='none';
-  });
-
-  [inputs.smu, inputs.freq, inputs.changeOut].forEach(i => i.addEventListener('input', updateCalc));
-  function updateCalc(){
-    const smu = Number(inputs.smu.value) || 0;
-    const freq = Number(inputs.freq.value) || 0;
-    const changeOut = inputs.changeOut.value ? new Date(inputs.changeOut.value) : null;
-    let life = smu;
-    if(changeOut){
-      const daysSinceChange = Math.floor((Date.now() - changeOut) / 86400000);
-      life = smu - daysSinceChange;
-    }
-    inputs.life.value = life;
-    inputs.pct.value = freq>0 ? Math.round(life/freq*100) : 0;
-  }
-
-  function numOrNull(v){
-    const n = Number(v);
-    return isNaN(n) ? null : n;
-  }
-
-  form.addEventListener('submit', async e=>{
-    e.preventDefault();
-    const payload = {
-      equip: inputs.equip.value.trim(),
-      model: inputs.model.value.trim(),
-      component: inputs.component.value.trim(),
-      freq: numOrNull(inputs.freq.value),
-      cost: numOrNull(inputs.cost.value),
-      changeOut: inputs.changeOut.value||null,
-      smu: numOrNull(inputs.smu.value),
-      rating: numOrNull(inputs.rating.value),
-      remarks: inputs.remarks.value||null,
-      pictureUrl:null,
-      createdAt: Date.now()
-    };
-    if(!payload.equip||!payload.component){
-      alert('Equip & Component wajib diisi');
-      return;
-    }
-    if(editId){
-      const docRef = doc(db,'components',editId);
-      const file = inputs.picture.files[0];
-      if(file){
-        const r = ref(storage, `pictures/${editId}/${file.name}`);
-        await uploadBytes(r,file);
-        payload.pictureUrl = await getDownloadURL(r);
-      }
-      await updateDoc(docRef,payload);
-    } else {
-      const docRef = await addDoc(colRef,payload);
-      const file = inputs.picture.files[0];
-      if(file){
-        const r = ref(storage, `pictures/${docRef.id}/${file.name}`);
-        await uploadBytes(r,file);
-        await updateDoc(doc(db,'components',docRef.id),{pictureUrl:await getDownloadURL(r)});
-      }
-    }
-    modal.style.display='none';
-  });
-
-  function onEdit(e){
-    const tr = e.target.closest('tr');
-    editId = tr.dataset.id;
-    const row = allDocs.find(d=>d.id===editId);
-    if(!row) return;
-    modalTitle.innerText="Edit Component";
-    inputs.equip.value=row.equip||'';
-    inputs.model.value=row.model||'';
-    inputs.component.value=row.component||'';
-    inputs.freq.value=row.freq||'';
-    inputs.cost.value=row.cost||'';
-    inputs.changeOut.value=row.changeOut||'';
-    inputs.smu.value=row.smu||'';
-    inputs.rating.value=row.rating||'';
-    inputs.remarks.value=row.remarks||'';
-    inputs.life.value = computeLife(row);
-    inputs.pct.value = computePct(inputs.life.value,row.freq);
-    modal.style.display='block';
-  }
-
-  async function onDelete(e){
-    const tr = e.target.closest('tr');
-    const id = tr.dataset.id;
-    if(confirm('Hapus baris ini?')){
-      await updateDoc(doc(db,'components',id), {deleted:true});
-    }
-  }
-
-  const previewBtn = document.getElementById('btnPreviewBulk');
-  const applyBtn = document.getElementById('btnApplyBulk');
-  const bulkTA = document.getElementById('smuBulk');
-  const bulkResult = document.getElementById('bulkResult');
-
-  if(previewBtn){
-    previewBtn.addEventListener('click', ()=>{
-      const lines = bulkTA.value.split('\n').map(l=>l.trim()).filter(Boolean);
-      bulkResult.innerHTML = lines.map(l=>esc(l)).join('<br/>');
-    });
-  }
-
-  if(applyBtn){
-    applyBtn.addEventListener('click', async ()=>{
-      const lines = bulkTA.value.split('\n').map(l=>l.trim()).filter(Boolean);
-      for(const line of lines){
-        const [equip, smu] = line.split(',').map(s=>s.trim());
-        if(!equip||!smu) continue;
-        const docToUpdate = allDocs.find(d=>d.equip===equip);
-        if(docToUpdate){
-          await updateDoc(doc(db,'components',docToUpdate.id), {smu:Number(smu)});
-        }
-      }
-      alert('SMU Updated!');
-    });
-  }
+  await addDoc(collection(db, "components"), { ...data, picture: imageUrl });
+  form.reset();
+  loadData();
 });
+
+async function loadData() {
+  const snapshot = await getDocs(collection(db, "components"));
+  const tbody = document.querySelector("#dataTable tbody");
+  tbody.innerHTML = "";
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${data.equip}</td><td>${data.model}</td><td>${data.component}</td><td>${data.freq}</td>
+      <td>${data.cost}</td><td>${data.changeOut}</td><td>${data.nextChange}</td><td>${data.smu}</td>
+      <td>${data.life}</td><td>${data.rating}</td><td>${data.remarks}</td>
+      <td><img src="${data.picture}" /></td>
+      <td><button class="btn btn-sm btn-warning">Edit</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById("smuForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const equip = form.equip.value;
+  const newSMU = form.smu.value;
+
+  const q = query(collection(db, "components"), where("equip", "==", equip));
+  const snapshot = await getDocs(q);
+  snapshot.forEach(async (docSnap) => {
+    await updateDoc(doc(db, "components", docSnap.id), { smu: newSMU });
+  });
+
+  form.reset();
+  loadData();
+});
+
+document.getElementById("filterInput").addEventListener("input", () => {
+  const filter = document.getElementById("filterInput").value.toLowerCase();
+  const rows = document.querySelectorAll("#dataTable tbody tr");
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(filter) ? "" : "none";
+  });
+});
+
+loadData();
