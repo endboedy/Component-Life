@@ -1,4 +1,4 @@
-<!-- Firebase SDK -->
+// Firebase SDK
 <script type="module">
   // Import dari CDN
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -338,5 +338,6 @@ async function saveSMUMass() {
   }
   alert("SMU updated.");
 }
+
 
 
