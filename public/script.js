@@ -82,24 +82,25 @@ async function loadData() {
 // =========================
 // Add Data Baru
 // =========================
-const addBtn = document.querySelector("#add-btn");
-
-if (addBtn) {
-  addBtn.addEventListener("click", async () => {
-    const newRow = {
-      equipment: "NEW",
-      current_smu: 0,
-      life: 0,
-      rating: "-",
-      remarks: "-",
-      pictureUrl: ""
-    };
-    await addDoc(collection(db, "components"), newRow);
-    loadData();
-  });
-} else {
-  console.warn("⚠️ Tombol Add New (#add-btn) tidak ditemukan di HTML.");
-}
+document.querySelector("#add-new").addEventListener("click", async () => {
+  const newRow = {
+    equipment: "NEW",
+    model: "-",
+    component: "-",
+    freq: 0,
+    cost: 0,
+    change_out: "-",
+    rating: "-",
+    remarks: "-",
+    pictureUrl: "",
+    current_smu: 0,
+    next_change: "-",
+    life: 0,
+    life_percent: 0
+  };
+  await addDoc(collection(db, "components"), newRow);
+  loadData();
+});
 
 // =========================
 // Upload Gambar (contoh input file #upload)
@@ -132,5 +133,6 @@ document.querySelector("#filter-input").addEventListener("input", async (e) => {
 // Start Render
 // =========================
 loadData();
+
 
 
