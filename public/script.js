@@ -1,8 +1,8 @@
 
 // script.js (modular Firebase SDK)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
+import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
 
 document.addEventListener('DOMContentLoaded', () => {
   // ===== Tabs =====
@@ -62,13 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ===== Helpers =====
   const fmtMoney = v => (v != null) ? `${Number(v).toLocaleString()}` : '-';
-  const esc = s => (s != null)
-    ? String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-    : '';
-
+  const esc = s => (s != null) ? String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
   const pctBadge = (pct) => {
     if (pct == null || isNaN(pct)) return '-';
     if (pct < 60) return `<span class="badge ok">${pct}%</span>`;
@@ -76,19 +70,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return `<span class="badge danger">${pct}%</span>`;
   };
 
-  function renderExample(data) {
-    const moneyEl = document.getElementById('money');
-    const pctEl = document.getElementById('pct');
-    if (moneyEl) moneyEl.textContent = fmtMoney(data?.value);
-    if (pctEl) pctEl.innerHTML = pctBadge(data?.pct);
-  }
-
   function populateFilters(rows) {
     const uniq = arr => Array.from(new Set(arr.filter(Boolean)));
     const equips = uniq(rows.map(r => r.equip));
     const models = uniq(rows.map(r => r.model));
     const comps = uniq(rows.map(r => r.component));
-
     filterEquip.innerHTML = `<option value="">Equip (All)</option>` + equips.map(e => `<option>${e}</option>`).join('');
     filterModel.innerHTML = `<option value="">Model (All)</option>` + models.map(m => `<option>${m}</option>`).join('');
     filterComponent.innerHTML = `<option value="">Component (All)</option>` + comps.map(c => `<option>${c}</option>`).join('');
@@ -98,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const e = filterEquip.value,
           m = filterModel.value,
           c = filterComponent.value;
-
     return rows.filter(r =>
       (!e || r.equip === e) &&
       (!m || r.model === m) &&
@@ -106,83 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   }
 
-  function renderTable() {
-    const rows = applyFilter(allDocs);
-    tbody.innerHTML = rows.map(r => `
-      <tr>
-        <td>${esc(r.equip)}</td>
-        <td>${esc(r.model)}</td>
-        <td>${esc(r.component)}</td>
-        <td>${r.freq ?? '-'}</td>
-        <td>${fmtMoney(r.cost)}</td>
-        <td>${r.changeOut ?? '-'}</td>
-        <td>${r.nextChange ?? '-'}</td>
-        <td>${r.smu ?? '-'}</td>
-        <td>${r.life ?? '-'}</td>
-        <td>${pctBadge(r.pct)}</td>
-        <td>${r.rating ?? '-'}</td>
-        <td>${esc(r.remarks)}</td>
-        <td>${r.picture ? `<img src="${r.picture}" width="40">` : '-'}</td>
-        <td><button class="btn small">Edit</button></td>
-      </tr>
-    `).join('');
-  }
-
-  // ===== Firestore Listener =====
-  const colRef = collection(db, 'components');
-  const q = query(colRef, orderBy('equip'));
-
-  onSnapshot(q, (snap) => {
-    allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    populateFilters(allDocs);
-    renderTable();
-  });
-});
-
-  // ===== Table render =====
-  function renderTable() {
-    const rows = applyFilter(allDocs);
-    tbody.innerHTML = rows.map(r => rowHtml(r)).join('');
-    attachRowEvents();
-  }
-
-  function rowHtml(r) {
-    const nextChange = computeNextChange(r);
-    const life = computeLife(r);
-    const pct = computePct(life, r.freq);
-    const rating = (typeof r.rating === 'number' && r.rating > 0) ? '⭐'.repeat(r.rating) : '-';
-    const pic = r.pictureUrl
-      ? `<a href="${r.pictureUrl}" target="_blank"><img class="thumb" src="${r.pictureUrl}"/></a>`
-      : '-';
-    const remarks = r.remarks || "";
-
-    return `<tr data-id="${r.id}">
-    <td>${esc(r.equip)}</td>
-    <td>${esc(r.model)}</td>
-    <td>${esc(r.component)}</td>
-    <td>${r.freq||''}</td>
-    <td>${fmtMoney(r.cost)}</td>
-    <td>${r.changeOut||''}</td>
-    <td>${nextChange||''}</td>
-    <td>${r.smu||''}</td>
-    <td>${life||''}</td>
-    <td>${pctBadge(pct)}</td>
-    <td>${rating}</td>
-    <td title="${esc(remarks)}">${esc(remarks).slice(0,18)}${remarks.length>18?'…':''}</td>
-    <td>${pic}</td>
-    <td>
-      <button class="action-btn edit">✏️</button>
-      <button class="action-btn del">🗑️</button>
-    </td>
-  </tr>`;
-  }
-
-  function attachRowEvents(){
-    tbody.querySelectorAll('.edit').forEach(btn=>btn.addEventListener('click', onEdit));
-    tbody.querySelectorAll('.del').forEach(btn=>btn.addEventListener('click', onDelete));
-  }
-
-  // ===== Computation =====
   function computeNextChange(r){
     if(!r.freq || !r.changeOut) return null;
     const co = new Date(r.changeOut);
@@ -201,7 +109,51 @@ document.addEventListener('DOMContentLoaded', () => {
     return Math.round(life/freq*100);
   }
 
-  // ===== Add/Edit =====
+  function renderTable() {
+    const rows = applyFilter(allDocs);
+    tbody.innerHTML = rows.map(r => {
+      const nextChange = computeNextChange(r);
+      const life = computeLife(r);
+      const pct = computePct(life, r.freq);
+      const rating = (typeof r.rating === 'number' && r.rating > 0) ? '⭐'.repeat(r.rating) : '-';
+      const pic = r.pictureUrl ? `<a href="${r.pictureUrl}" target="_blank"><img class="thumb" src="${r.pictureUrl}"/></a>` : '-';
+      const remarks = r.remarks || "";
+      return `<tr data-id="${r.id}">
+        <td>${esc(r.equip)}</td>
+        <td>${esc(r.model)}</td>
+        <td>${esc(r.component)}</td>
+        <td>${r.freq||''}</td>
+        <td>${fmtMoney(r.cost)}</td>
+        <td>${r.changeOut||''}</td>
+        <td>${nextChange||''}</td>
+        <td>${r.smu||''}</td>
+        <td>${life||''}</td>
+        <td>${pctBadge(pct)}</td>
+        <td>${rating}</td>
+        <td title="${esc(remarks)}">${esc(remarks).slice(0,18)}${remarks.length>18?'…':''}</td>
+        <td>${pic}</td>
+        <td>
+          <button class="action-btn edit">✏️</button>
+          <button class="action-btn del">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+    attachRowEvents();
+  }
+
+  function attachRowEvents(){
+    tbody.querySelectorAll('.edit').forEach(btn=>btn.addEventListener('click', onEdit));
+    tbody.querySelectorAll('.del').forEach(btn=>btn.addEventListener('click', onDelete));
+  }
+
+  const colRef = collection(db, 'components');
+  const q = query(colRef, orderBy('equip'));
+  onSnapshot(q, (snap) => {
+    allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    populateFilters(allDocs);
+    renderTable();
+  });
+
   btnAddNew.addEventListener('click', () => {
     editId = null;
     modalTitle.textContent = 'Add Component';
@@ -212,11 +164,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   spanClose.addEventListener('click', () => modal.style.display = 'none');
-  window.addEventListener('click', e => { if (e.target===modal) modal.style.display='none'; });
+  window.addEventListener('click', e => {
+    if (e.target===modal) modal.style.display='none';
+  });
 
-  // ===== Live calculation =====
   [inputs.smu, inputs.freq, inputs.changeOut].forEach(i => i.addEventListener('input', updateCalc));
-
   function updateCalc(){
     const smu = Number(inputs.smu.value) || 0;
     const freq = Number(inputs.freq.value) || 0;
@@ -230,7 +182,11 @@ document.addEventListener('DOMContentLoaded', () => {
     inputs.pct.value = freq>0 ? Math.round(life/freq*100) : 0;
   }
 
-  // ===== Save form =====
+  function numOrNull(v){
+    const n = Number(v);
+    return isNaN(n) ? null : n;
+  }
+
   form.addEventListener('submit', async e=>{
     e.preventDefault();
     const payload = {
@@ -246,8 +202,10 @@ document.addEventListener('DOMContentLoaded', () => {
       pictureUrl:null,
       createdAt: Date.now()
     };
-    if(!payload.equip||!payload.component){ alert('Equip & Component wajib diisi'); return; }
-
+    if(!payload.equip||!payload.component){
+      alert('Equip & Component wajib diisi');
+      return;
+    }
     if(editId){
       const docRef = doc(db,'components',editId);
       const file = inputs.picture.files[0];
@@ -258,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       await updateDoc(docRef,payload);
     } else {
-      const docRef = await addDoc(col,payload);
+      const docRef = await addDoc(colRef,payload);
       const file = inputs.picture.files[0];
       if(file){
         const r = ref(storage, `pictures/${docRef.id}/${file.name}`);
@@ -269,7 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.style.display='none';
   });
 
-  // ===== Edit/Delete =====
   function onEdit(e){
     const tr = e.target.closest('tr');
     editId = tr.dataset.id;
@@ -298,7 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ===== Bulk SMU =====
   const previewBtn = document.getElementById('btnPreviewBulk');
   const applyBtn = document.getElementById('btnApplyBulk');
   const bulkTA = document.getElementById('smuBulk');
@@ -326,11 +282,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
-
-
-
-
-
-
-
-
