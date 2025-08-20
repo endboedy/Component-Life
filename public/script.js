@@ -1,5 +1,5 @@
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, getDocs, updateDoc, doc, query, where
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
@@ -20,9 +20,9 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-function showMenu(menu) {
-  document.getElementById("compLife").style.display = menu === "compLife" ? "block" : "none";
-  document.getElementById("currentSMU").style.display = menu === "currentSMU" ? "block" : "none";
+function showTab(tab) {
+  document.getElementById("compLife").style.display = tab === "compLife" ? "block" : "none";
+  document.getElementById("currentSMU").style.display = tab === "currentSMU" ? "block" : "none";
 }
 
 document.getElementById("addForm").addEventListener("submit", async (e) => {
@@ -40,6 +40,7 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
 
   await addDoc(collection(db, "components"), { ...data, picture: imageUrl });
   form.reset();
+  document.querySelector(".btn-close").click();
   loadData();
 });
 
@@ -54,7 +55,7 @@ async function loadData() {
       <td>${data.equip}</td><td>${data.model}</td><td>${data.component}</td><td>${data.freq}</td>
       <td>${data.cost}</td><td>${data.changeOut}</td><td>${data.nextChange}</td><td>${data.smu}</td>
       <td>${data.life}</td><td>${data.rating}</td><td>${data.remarks}</td>
-      <td><img src="${data.picture}" /></td>
+      <td><img src="${data.picture}" style="max-width:80px;" /></td>
       <td><button class="btn btn-sm btn-warning">Edit</button></td>
     `;
     tbody.appendChild(tr);
