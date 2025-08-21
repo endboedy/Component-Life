@@ -34,7 +34,7 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 console.log("Firebase berhasil terhubung ✅");
-console.log("🔍 Project ID:", app.options.projectId); // Debug project id
+console.log("🔍 Project ID:", firebaseConfig.projectId); // pakai dari config
 
 // =========================
 // Load Data dari Firestore
@@ -183,3 +183,4 @@ service cloud.firestore {
   }
 }
 */
+
