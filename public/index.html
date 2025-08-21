@@ -66,6 +66,25 @@
     <button id="save-smu">Save SMU Updates</button>
   </section>
 
+  <!-- ==================== Form Add New (Modal) ==================== -->
+  <section id="form-section" style="display:none;">
+    <h2>➕ Add / Edit Component</h2>
+    <form id="dataForm">
+      <label>Equipment: <input type="text" id="equipment" required></label><br>
+      <label>Model: <input type="text" id="model" required></label><br>
+      <label>Component: <input type="text" id="component" required></label><br>
+      <label>Freq: <input type="number" id="freq" required></label><br>
+      <label>Cost: <input type="number" id="cost"></label><br>
+      <label>Change Out: <input type="text" id="changeout"></label><br>
+      <label>Rating: <input type="text" id="rating"></label><br>
+      <label>Remarks: <input type="text" id="remarks"></label><br>
+      <label>Picture/PDF URL: <input type="text" id="picture"></label><br>
+      <label>Current SMU: <input type="number" id="current_smu"></label><br>
+      <button type="submit">Save</button>
+      <button type="button" id="cancel-form">Cancel</button>
+    </form>
+  </section>
+
   <!-- Script harus dipanggil paling akhir -->
   <script type="module" src="./script.js"></script>
 </body>
