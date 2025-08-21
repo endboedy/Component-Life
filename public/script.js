@@ -25,7 +25,7 @@ const firebaseConfig = {
   storageBucket: "component-life.appspot.com",
   messagingSenderId: "401190574281",
   appId: "1:401190574281:web:16c2401b5bda146779d518",
-  measurementId: "G-77WF4LVS25"
+  measurementId: "G-77WF4LVS25",
 };
 
 // Init Firebase
@@ -34,6 +34,7 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 console.log("Firebase berhasil terhubung ✅");
+console.log("🔍 Project ID:", app.options.projectId); // Debug project id
 
 // =========================
 // Load Data dari Firestore
@@ -48,7 +49,13 @@ async function loadData() {
   body.innerHTML = ""; // kosongkan tabel
 
   try {
+    console.log("🔍 Mengambil data dari collection: componentLife"); // Debug
     const querySnapshot = await getDocs(collection(db, "componentLife"));
+
+    if (querySnapshot.empty) {
+      console.warn("⚠️ Collection 'componentLife' kosong atau tidak ditemukan.");
+    }
+
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data();
       const row = document.createElement("tr");
@@ -71,7 +78,8 @@ async function loadData() {
       body.appendChild(row);
     });
   } catch (err) {
-    console.error("Gagal ambil data ❌", err);
+    console.error("❌ Gagal ambil data dari Firestore:", err.code, err.message);
+    console.error("Detail error object:", err);
   }
 }
 
@@ -107,7 +115,7 @@ document.querySelector("#add-btn")?.addEventListener("click", async () => {
     alert("Data berhasil ditambahkan ✅");
     loadData();
   } catch (err) {
-    console.error("Gagal tambah data ❌", err);
+    console.error("Gagal tambah data ❌", err.code, err.message);
   }
 });
 
@@ -118,8 +126,12 @@ document.addEventListener("click", async (e) => {
   if (e.target.classList.contains("delete-btn")) {
     const id = e.target.dataset.id;
     if (confirm("Yakin ingin hapus data ini?")) {
-      await deleteDoc(doc(db, "componentLife", id));
-      loadData();
+      try {
+        await deleteDoc(doc(db, "componentLife", id));
+        loadData();
+      } catch (err) {
+        console.error("❌ Gagal hapus data:", err.code, err.message);
+      }
     }
   }
 });
@@ -138,7 +150,7 @@ document.querySelector("#upload")?.addEventListener("change", async (e) => {
 
     alert("Upload berhasil ✅ URL: " + url);
   } catch (err) {
-    console.error("Upload gagal ❌", err);
+    console.error("Upload gagal ❌", err.code, err.message);
   }
 });
 
@@ -161,3 +173,13 @@ document.addEventListener("DOMContentLoaded", () => {
   loadData();
 });
 
+/*
+⚠️ NOTE: Firestore rules harus mengizinkan akses agar tidak error 400:
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true; // sementara untuk test
+    }
+  }
+}
+*/
