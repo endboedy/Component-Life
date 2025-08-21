@@ -12,13 +12,15 @@ import {
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// Konfigurasi Firebase
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAHQFyRifcuYJYGuiQaK9vvWJpYGfoDdmI",
+  authDomain: "component-life.firebaseapp.com",
+  projectId: "component-life",
+  storageBucket: "component-life.appspot.com",
+  messagingSenderId: "401190574281",
+  appId: "1:401190574281:web:16c2401b5bda146779d518",
+  measurementId: "G-77WF4LVS25"
 };
 
 // Inisialisasi Firebase
@@ -185,4 +187,5 @@ if (saveSmuBtn) {
 // Default load Menu 1
 // =========================
 loadComponentLife();
+
 
