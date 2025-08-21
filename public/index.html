@@ -1,91 +1,215 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Component Life EM</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- Hilangkan warning favicon 404 -->
-  <link rel="icon" href="data:,">
+  <style>
+    body {
+      font-family: 'Aptos Narrow', sans-serif;
+      font-size: 11px;
+      background-color: #f4f4f4;
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: left;
+      font-weight: normal;
+    }
+    th {
+      background-color: #eee;
+    }
+    input, button {
+      font-family: 'Aptos Narrow', sans-serif;
+      font-size: 11px;
+      margin: 5px;
+    }
+  </style>
 </head>
 <body>
-  <header class="app-header">
-    <h1>⚙️ Component Life EM</h1>
-    <nav class="menu">
-      <button id="menu-comp-life">Comp-Life</button>
-      <button id="menu-update-smu">Update Current SMU</button>
-    </nav>
-  </header>
+  <h2>Component Life EM</h2>
 
-  <!-- ==================== Menu 1: Comp-Life ==================== -->
-  <section id="comp-life-section">
-    <h2>📋 Component Life</h2>
+  <input type="text" id="filter-input" placeholder="Filter data..." />
+  <br/>
 
-    <div class="toolbar">
-      <input type="text" id="filter-equipment" placeholder="Filter Equipment...">
-      <input type="text" id="filter-model" placeholder="Filter Model...">
-      <input type="text" id="filter-component" placeholder="Filter Component...">
-      <button id="add-new">+ Add New</button>
-    </div>
+  <input type="text" id="equipment" placeholder="Equipment" />
+  <input type="text" id="model" placeholder="Model" />
+  <input type="text" id="component" placeholder="Component" />
+  <button id="add-btn">Tambah Data</button>
+  <br/>
 
-    <table id="component-table">
-      <thead>
-        <tr>
-          <th>Equipment</th>
-          <th>Model</th>
-          <th>Component</th>
-          <th>Freq</th>
-          <th>Cost</th>
-          <th>Change Out</th>
-          <th>Rating</th>
-          <th>Remarks</th>
-          <th>Picture/PDF</th>
-          <th>Current SMU</th>
-          <th>Next Change</th>
-          <th>Life</th>
-          <th>Life %</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="component-body"></tbody>
-    </table>
-  </section>
+  <input type="file" id="upload" />
+  <br/>
 
-  <!-- ==================== Menu 2: Update Current SMU ==================== -->
-  <section id="update-smu-section" style="display:none;">
-    <h2>🔧 Update Current SMU</h2>
-    <table id="smu-table">
-      <thead>
-        <tr>
-          <th>Equipment ID</th>
-          <th>Current SMU</th>
-        </tr>
-      </thead>
-      <tbody id="smu-body"></tbody>
-    </table>
-    <button id="save-smu">Save SMU Updates</button>
-  </section>
+  <table>
+    <thead>
+      <tr>
+        <th>Equipment</th>
+        <th>Model</th>
+        <th>Component</th>
+        <th>Freq</th>
+        <th>Cost</th>
+        <th>Change Out</th>
+        <th>Rating</th>
+        <th>Remarks</th>
+        <th>Picture</th>
+        <th>Current SMU</th>
+        <th>Next Change</th>
+        <th>Life</th>
+        <th>Life %</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="component-body"></tbody>
+  </table>
 
-  <!-- ==================== Form Add New (Modal) ==================== -->
-  <section id="form-section" style="display:none;">
-    <h2>➕ Add / Edit Component</h2>
-    <form id="dataForm">
-      <label>Equipment: <input type="text" id="equipment" required></label><br>
-      <label>Model: <input type="text" id="model" required></label><br>
-      <label>Component: <input type="text" id="component" required></label><br>
-      <label>Freq: <input type="number" id="freq" required></label><br>
-      <label>Cost: <input type="number" id="cost"></label><br>
-      <label>Change Out: <input type="text" id="changeout"></label><br>
-      <label>Rating: <input type="text" id="rating"></label><br>
-      <label>Remarks: <input type="text" id="remarks"></label><br>
-      <label>Picture/PDF URL: <input type="text" id="picture"></label><br>
-      <label>Current SMU: <input type="number" id="current_smu"></label><br>
-      <button type="submit">Save</button>
-      <button type="button" id="cancel-form">Cancel</button>
-    </form>
-  </section>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+    import {
+      initializeFirestore,
+      collection,
+      getDocs,
+      addDoc,
+      deleteDoc,
+      doc
+    } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+    import {
+      getStorage,
+      ref,
+      uploadBytes,
+      getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
 
-  <!-- Script harus dipanggil paling akhir -->
-  <script type="module" src="./script.js"></script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHQFyRifcuYJYGuiQaK9vvWJpYGfoDdmI",
+      authDomain: "component-life.firebaseapp.com",
+      projectId: "component-life",
+      storageBucket: "component-life.appspot.com",
+      messagingSenderId: "401190574281",
+      appId: "1:401190574281:web:16c2401b5bda146779d518",
+      measurementId: "G-77WF4LVS25"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = initializeFirestore(app, {
+      experimentalForceLongPolling: true,
+      useFetchStreams: false
+    });
+    const storage = getStorage(app);
+
+    console.log("Firebase berhasil terhubung ✅");
+
+    async function loadData() {
+      const body = document.getElementById("component-body");
+      if (!body) {
+        console.error("❌ Element #component-body tidak ditemukan.");
+        return;
+      }
+
+      body.innerHTML = "";
+
+      try {
+        const querySnapshot = await getDocs(collection(db, "componentLife"));
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${data.equipment || ""}</td>
+            <td>${data.model || ""}</td>
+            <td>${data.component || ""}</td>
+            <td>${data.freq || ""}</td>
+            <td>${data.cost || ""}</td>
+            <td>${data.changeOut || ""}</td>
+            <td>${data.rating || ""}</td>
+            <td>${data.remarks || ""}</td>
+            <td>${data.picture ? `<img src="${data.picture}" width="50"/>` : ""}</td>
+            <td>${data.currentSMU || ""}</td>
+            <td>${data.nextChange || ""}</td>
+            <td>${data.life || ""}</td>
+            <td>${data.lifePercent || ""}</td>
+            <td><button class="delete-btn" data-id="${docSnap.id}">❌</button></td>
+          `;
+          body.appendChild(row);
+        });
+      } catch (err) {
+        console.error("Gagal ambil data ❌", err);
+      }
+    }
+
+    document.querySelector("#add-btn")?.addEventListener("click", async () => {
+      const equipment = document.getElementById("equipment").value;
+      const model = document.getElementById("model").value;
+      const component = document.getElementById("component").value;
+
+      if (!equipment || !model || !component) {
+        alert("Mohon isi semua field wajib ❌");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "componentLife"), {
+          equipment,
+          model,
+          component,
+          freq: "",
+          cost: "",
+          changeOut: "",
+          rating: "",
+          remarks: "",
+          picture: "",
+          currentSMU: "",
+          nextChange: "",
+          life: "",
+          lifePercent: ""
+        });
+        alert("Data berhasil ditambahkan ✅");
+        loadData();
+      } catch (err) {
+        console.error("Gagal tambah data ❌", err);
+      }
+    });
+
+    document.addEventListener("click", async (e) => {
+      if (e.target.classList.contains("delete-btn")) {
+        const id = e.target.dataset.id;
+        if (confirm("Yakin ingin hapus data ini?")) {
+          await deleteDoc(doc(db, "componentLife", id));
+          loadData();
+        }
+      }
+    });
+
+    document.querySelector("#upload")?.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        const storageRef = ref(storage, "images/" + file.name);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        alert("Upload berhasil ✅ URL: " + url);
+      } catch (err) {
+        console.error("Upload gagal ❌", err);
+      }
+    });
+
+    document.querySelector("#filter-input")?.addEventListener("input", async (e) => {
+      const keyword = e.target.value.toLowerCase();
+      const rows = document.querySelectorAll("#component-body tr");
+      rows.forEach((row) => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(keyword) ? "" : "none";
+      });
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadData();
+    });
+  </script>
 </body>
 </html>
