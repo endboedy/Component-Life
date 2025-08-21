@@ -9,182 +9,166 @@ import {
   addDoc,
   deleteDoc,
   doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL,
+  getStorage
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-// Konfigurasi Firebase
+// Konfigurasi Firebase (ISI sesuai project Firebase kamu)
 const firebaseConfig = {
-  apiKey: "AIzaSyAHQFyRifcuYJYGuiQaK9vvWJpYGfoDdmI",
-  authDomain: "component-life.firebaseapp.com",
-  projectId: "component-life",
-  storageBucket: "component-life.appspot.com",
-  messagingSenderId: "401190574281",
-  appId: "1:401190574281:web:16c2401b5bda146779d518",
-  measurementId: "G-77WF4LVS25",
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
 };
 
-// Init Firebase
+// Inisialisasi Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-console.log("✅ Firebase berhasil terhubung");
-console.log("🔍 Project ID:", firebaseConfig.projectId); // ambil langsung dari config
+console.log("✅ Firebase terhubung");
+console.log("🔍 Project ID:", firebaseConfig.projectId);
 
 // =========================
-// Load Data dari Firestore
+// Global
+// =========================
+const tableBody = document.getElementById("component-body");
+const collRef = collection(db, "componentLife");
+
+// =========================
+// Load Data
 // =========================
 async function loadData() {
-  const body = document.getElementById("component-body");
-  if (!body) {
-    console.error("❌ Element #component-body tidak ditemukan.");
-    return;
-  }
-
-  body.innerHTML = ""; // kosongkan tabel
-
   try {
-    console.log("📡 Mengambil data dari collection: componentLife");
-
-    const querySnapshot = await getDocs(collection(db, "componentLife"));
-
-    if (querySnapshot.empty) {
-      console.warn("⚠️ Collection 'componentLife' kosong atau tidak ditemukan.");
-    }
+    tableBody.innerHTML = "";
+    const querySnapshot = await getDocs(collRef);
 
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      console.log("✅ Data ditemukan:", data);
+      const id = docSnap.id;
+
+      // Hitung rumus (misalnya life & lifePercent)
+      const life = (data.changeOut || 0) - (data.currentSMU || 0);
+      const lifePercent = data.changeOut ? ((data.currentSMU / data.changeOut) * 100).toFixed(1) : 0;
 
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${data.equipment || ""}</td>
-        <td>${data.model || ""}</td>
-        <td>${data.component || ""}</td>
-        <td>${data.freq || ""}</td>
-        <td>${data.cost || ""}</td>
-        <td>${data.changeOut || ""}</td>
-        <td>${data.rating || ""}</td>
-        <td>${data.remarks || ""}</td>
-        <td>${data.picture ? `<img src="${data.picture}" width="50"/>` : ""}</td>
-        <td>${data.currentSMU || ""}</td>
-        <td>${data.nextChange || ""}</td>
-        <td>${data.life || ""}</td>
-        <td>${data.lifePercent || ""}</td>
-        <td><button class="delete-btn" data-id="${docSnap.id}">❌</button></td>
+        <td contenteditable="true" data-field="equipment">${data.equipment || ""}</td>
+        <td contenteditable="true" data-field="component">${data.component || ""}</td>
+        <td contenteditable="true" data-field="currentSMU">${data.currentSMU || ""}</td>
+        <td contenteditable="true" data-field="changeOut">${data.changeOut || ""}</td>
+        <td>${life}</td>
+        <td>${lifePercent}%</td>
+        <td>
+          <button class="save-btn" data-id="${id}">💾 Save</button>
+          <button class="delete-btn" data-id="${id}">🗑️ Delete</button>
+        </td>
       `;
-      body.appendChild(row);
+      tableBody.appendChild(row);
     });
+
+    addRowActions();
   } catch (err) {
-    console.error("❌ Gagal ambil data dari Firestore");
-    console.error("Error code:", err.code || "-");
-    console.error("Error message:", err.message || "-");
-    console.error("Detail error:", err);
+    console.error("❌ Error load data:", err);
   }
 }
 
 // =========================
-// Tambah Data Baru
+// Add New
 // =========================
-document.querySelector("#add-btn")?.addEventListener("click", async () => {
-  const equipment = document.getElementById("equipment").value;
-  const model = document.getElementById("model").value;
-  const component = document.getElementById("component").value;
-
-  if (!equipment || !model || !component) {
-    alert("Mohon isi semua field wajib ❌");
-    return;
-  }
-
+document.getElementById("addNewBtn").addEventListener("click", async () => {
   try {
-    await addDoc(collection(db, "componentLife"), {
-      equipment,
-      model,
-      component,
-      freq: "",
-      cost: "",
-      changeOut: "",
-      rating: "",
-      remarks: "",
-      picture: "",
-      currentSMU: "",
-      nextChange: "",
-      life: "",
-      lifePercent: "",
-    });
-    alert("Data berhasil ditambahkan ✅");
+    const newData = {
+      equipment: "New Unit",
+      component: "New Component",
+      currentSMU: 0,
+      changeOut: 0
+    };
+    await addDoc(collRef, newData);
+    console.log("✅ Data baru ditambahkan");
     loadData();
   } catch (err) {
-    console.error("❌ Gagal tambah data:", err.code, err.message);
+    console.error("❌ Error add new:", err);
   }
 });
 
 // =========================
-// Hapus Data
+// Save (Update)
 // =========================
-document.addEventListener("click", async (e) => {
-  if (e.target.classList.contains("delete-btn")) {
-    const id = e.target.dataset.id;
-    if (confirm("Yakin ingin hapus data ini?")) {
-      try {
-        await deleteDoc(doc(db, "componentLife", id));
-        loadData();
-      } catch (err) {
-        console.error("❌ Gagal hapus data:", err.code, err.message);
-      }
-    }
-  }
-});
+async function saveData(id, row) {
+  const cells = row.querySelectorAll("[contenteditable=true]");
+  const updatedData = {};
 
-// =========================
-// Upload Gambar
-// =========================
-document.querySelector("#upload")?.addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  cells.forEach((cell) => {
+    const field = cell.getAttribute("data-field");
+    let value = cell.innerText.trim();
+    if (field === "currentSMU" || field === "changeOut") value = parseFloat(value) || 0;
+    updatedData[field] = value;
+  });
 
   try {
-    const storageRef = ref(storage, "images/" + file.name);
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
-
-    alert("Upload berhasil ✅ URL: " + url);
+    await updateDoc(doc(db, "componentLife", id), updatedData);
+    console.log("✅ Data berhasil diupdate:", id);
+    loadData();
   } catch (err) {
-    console.error("❌ Upload gagal:", err.code, err.message);
-  }
-});
-
-// =========================
-// Filter Data
-// =========================
-document.querySelector("#filter-input")?.addEventListener("input", async (e) => {
-  const keyword = e.target.value.toLowerCase();
-  const rows = document.querySelectorAll("#component-body tr");
-  rows.forEach((row) => {
-    const text = row.innerText.toLowerCase();
-    row.style.display = text.includes(keyword) ? "" : "none";
-  });
-});
-
-// =========================
-// Jalankan loadData setelah DOM siap
-// =========================
-document.addEventListener("DOMContentLoaded", () => {
-  loadData();
-});
-
-/*
-⚠️ NOTE: Firestore rules harus mengizinkan akses agar tidak error 400:
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true; // sementara untuk test
-    }
+    console.error("❌ Error update:", err);
   }
 }
-*/
+
+// =========================
+// Delete
+// =========================
+async function deleteData(id) {
+  try {
+    await deleteDoc(doc(db, "componentLife", id));
+    console.log("✅ Data terhapus:", id);
+    loadData();
+  } catch (err) {
+    console.error("❌ Error delete:", err);
+  }
+}
+
+// =========================
+// Tambah Action Buttons
+// =========================
+function addRowActions() {
+  document.querySelectorAll(".save-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-id");
+      const row = btn.closest("tr");
+      saveData(id, row);
+    });
+  });
+
+  document.querySelectorAll(".delete-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-id");
+      deleteData(id);
+    });
+  });
+}
+
+// =========================
+// Filter
+// =========================
+document.getElementById("filterInput").addEventListener("keyup", () => {
+  const filterValue = document.getElementById("filterInput").value.toLowerCase();
+  const rows = tableBody.getElementsByTagName("tr");
+
+  for (let i = 0; i < rows.length; i++) {
+    const firstCell = rows[i].getElementsByTagName("td")[0];
+    if (firstCell) {
+      const textValue = firstCell.textContent || firstCell.innerText;
+      rows[i].style.display = textValue.toLowerCase().indexOf(filterValue) > -1 ? "" : "none";
+    }
+  }
+});
+
+// =========================
+// Init
+// =========================
+loadData();
