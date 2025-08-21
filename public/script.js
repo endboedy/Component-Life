@@ -1,4 +1,3 @@
-
 // =========================
 // Firebase Config & Init
 // =========================
@@ -31,7 +30,7 @@ const firebaseConfig = {
 
 // Init Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app); // gunakan default config
+const db = getFirestore(app);
 const storage = getStorage(app);
 
 console.log("Firebase berhasil terhubung ✅");
@@ -72,6 +71,9 @@ async function loadData() {
       body.appendChild(row);
     });
   } catch (err) {
+    if (err.code === "unavailable") {
+      alert("Koneksi Firestore gagal. Cek jaringan atau konfigurasi.");
+    }
     console.error("Gagal ambil data ❌", err);
   }
 }
@@ -106,7 +108,7 @@ document.querySelector("#add-btn")?.addEventListener("click", async () => {
       lifePercent: ""
     });
     alert("Data berhasil ditambahkan ✅");
-    loadData();
+    await loadData();
   } catch (err) {
     console.error("Gagal tambah data ❌", err);
   }
@@ -119,8 +121,12 @@ document.addEventListener("click", async (e) => {
   if (e.target.classList.contains("delete-btn")) {
     const id = e.target.dataset.id;
     if (confirm("Yakin ingin hapus data ini?")) {
-      await deleteDoc(doc(db, "componentLife", id));
-      loadData();
+      try {
+        await deleteDoc(doc(db, "componentLife", id));
+        await loadData();
+      } catch (err) {
+        console.error("Gagal hapus data ❌", err);
+      }
     }
   }
 });
@@ -131,6 +137,11 @@ document.addEventListener("click", async (e) => {
 document.querySelector("#upload")?.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    alert("File harus berupa gambar.");
+    return;
+  }
 
   try {
     const storageRef = ref(storage, "images/" + file.name);
