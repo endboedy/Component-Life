@@ -1,3 +1,4 @@
+
 // =========================
 // Firebase Config & Init
 // =========================
@@ -30,7 +31,9 @@ const firebaseConfig = {
 
 // Init Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = getFirestore(app, {
+  experimentalForceLongPolling: true, // ✅ solusi error Listen/channel
+});
 const storage = getStorage(app);
 
 console.log("Firebase berhasil terhubung ✅");
