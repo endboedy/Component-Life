@@ -7,11 +7,17 @@ import {
   collection,
   getDocs,
   addDoc,
-  updateDoc,
+  deleteDoc,
   doc,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-// Firebase Config
+// Konfigurasi Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyAHQFyRifcuYJYGuiQaK9vvWJpYGfoDdmI",
   authDomain: "component-life.firebaseapp.com",
@@ -25,117 +31,132 @@ const firebaseConfig = {
 // Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
+
+console.log("Firebase berhasil terhubung ✅");
 
 // =========================
-// DOM Elements
+// Load Data dari Firestore
+// =========================
+async function loadData() {
+  const body = document.getElementById("component-body");
+  if (!body) {
+    console.error("❌ Element #component-body tidak ditemukan.");
+    return;
+  }
+
+  body.innerHTML = ""; // kosongkan tabel
+
+  try {
+    const querySnapshot = await getDocs(collection(db, "componentLife"));
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${data.equipment || ""}</td>
+        <td>${data.model || ""}</td>
+        <td>${data.component || ""}</td>
+        <td>${data.freq || ""}</td>
+        <td>${data.cost || ""}</td>
+        <td>${data.changeOut || ""}</td>
+        <td>${data.rating || ""}</td>
+        <td>${data.remarks || ""}</td>
+        <td>${data.picture ? `<img src="${data.picture}" width="50"/>` : ""}</td>
+        <td>${data.currentSMU || ""}</td>
+        <td>${data.nextChange || ""}</td>
+        <td>${data.life || ""}</td>
+        <td>${data.lifePercent || ""}</td>
+        <td><button class="delete-btn" data-id="${docSnap.id}">❌</button></td>
+      `;
+      body.appendChild(row);
+    });
+  } catch (err) {
+    console.error("Gagal ambil data ❌", err);
+  }
+}
+
+// =========================
+// Tambah Data Baru
+// =========================
+document.querySelector("#add-btn")?.addEventListener("click", async () => {
+  const equipment = document.getElementById("equipment").value;
+  const model = document.getElementById("model").value;
+  const component = document.getElementById("component").value;
+
+  if (!equipment || !model || !component) {
+    alert("Mohon isi semua field wajib ❌");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "componentLife"), {
+      equipment,
+      model,
+      component,
+      freq: "",
+      cost: "",
+      changeOut: "",
+      rating: "",
+      remarks: "",
+      picture: "",
+      currentSMU: "",
+      nextChange: "",
+      life: "",
+      lifePercent: "",
+    });
+    alert("Data berhasil ditambahkan ✅");
+    loadData();
+  } catch (err) {
+    console.error("Gagal tambah data ❌", err);
+  }
+});
+
+// =========================
+// Hapus Data
+// =========================
+document.addEventListener("click", async (e) => {
+  if (e.target.classList.contains("delete-btn")) {
+    const id = e.target.dataset.id;
+    if (confirm("Yakin ingin hapus data ini?")) {
+      await deleteDoc(doc(db, "componentLife", id));
+      loadData();
+    }
+  }
+});
+
+// =========================
+// Upload Gambar
+// =========================
+document.querySelector("#upload")?.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  try {
+    const storageRef = ref(storage, "images/" + file.name);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+
+    alert("Upload berhasil ✅ URL: " + url);
+  } catch (err) {
+    console.error("Upload gagal ❌", err);
+  }
+});
+
+// =========================
+// Filter Data
+// =========================
+document.querySelector("#filter-input")?.addEventListener("input", async (e) => {
+  const keyword = e.target.value.toLowerCase();
+  const rows = document.querySelectorAll("#component-body tr");
+  rows.forEach((row) => {
+    const text = row.innerText.toLowerCase();
+    row.style.display = text.includes(keyword) ? "" : "none";
+  });
+});
+
+// =========================
+// Jalankan loadData setelah DOM siap
 // =========================
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("dataForm");
-  const componentBody = document.getElementById("component-body"); // revisi: dataList → component-body
-
-  if (!form) {
-    console.error("❌ Form dengan ID 'dataForm' tidak ditemukan di HTML.");
-    return;
-  }
-  if (!componentBody) {
-    console.error("❌ Element dengan ID 'component-body' tidak ditemukan di HTML.");
-    return;
-  }
-
-  // =========================
-  // Load Data dari Firestore
-  // =========================
-  async function loadData() {
-    try {
-      componentBody.innerHTML = "<tr><td colspan='14'>Loading data...</td></tr>";
-      const querySnapshot = await getDocs(collection(db, "components"));
-      componentBody.innerHTML = "";
-
-      if (querySnapshot.empty) {
-        componentBody.innerHTML = "<tr><td colspan='14'>Tidak ada data ditemukan</td></tr>";
-      }
-
-      querySnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
-          <td>${docSnap.id}</td>
-          <td>${data.name || ""}</td>
-          <td>${data.model || ""}</td>
-          <td>${data.component || ""}</td>
-          <td>${data.freq || ""}</td>
-          <td>${data.cost || ""}</td>
-          <td>${data.changeOut || ""}</td>
-          <td>${data.rating || ""}</td>
-          <td>${data.remarks || ""}</td>
-          <td><a href="${data.picture || "#"}" target="_blank">View</a></td>
-          <td>${data.current_smu || ""}</td>
-          <td>${data.nextChange || ""}</td>
-          <td>${data.life || ""}</td>
-          <td>${data.lifePercent || ""}</td>
-        `;
-
-        componentBody.appendChild(tr);
-      });
-    } catch (error) {
-      console.error("🔥 Error load data:", error);
-      componentBody.innerHTML = `<tr><td colspan='14' style="color:red;">Error load data: ${error.message}</td></tr>`;
-    }
-  }
-
-  // =========================
-  // Submit Form → Tambah Data
-  // =========================
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = form.name?.value.trim();
-    const model = form.model?.value.trim();
-    const component = form.component?.value.trim();
-    const freq = form.freq?.value.trim();
-    const cost = form.cost?.value.trim();
-    const changeOut = form.changeout?.value.trim();
-    const rating = form.rating?.value.trim();
-    const remarks = form.remarks?.value.trim();
-    const picture = form.picture?.value.trim();
-    const current_smu = form.current_smu?.value.trim();
-
-    if (!name || !component) {
-      alert("⚠️ Harap isi minimal Name dan Component!");
-      return;
-    }
-
-    try {
-      const nextChange = current_smu && freq ? Number(current_smu) + Number(freq) : "";
-      const lifePercent = current_smu && nextChange ? ((Number(current_smu)/nextChange)*100).toFixed(1) : "";
-
-      await addDoc(collection(db, "components"), {
-        name,
-        model,
-        component,
-        freq: Number(freq) || "",
-        cost: Number(cost) || "",
-        changeOut,
-        rating,
-        remarks,
-        picture,
-        current_smu: Number(current_smu) || "",
-        nextChange,
-        life: nextChange - (Number(current_smu) || 0),
-        lifePercent,
-        createdAt: new Date().toISOString(),
-      });
-
-      form.reset();
-      loadData();
-    } catch (error) {
-      console.error("🔥 Error tambah data:", error);
-      alert("Gagal menambahkan data: " + error.message);
-    }
-  });
-
-  // =========================
-  // Initial Load
-  // =========================
   loadData();
 });
