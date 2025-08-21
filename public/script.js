@@ -1,22 +1,21 @@
-
 // =========================
 // Firebase Config & Init
 // =========================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
 import {
   getFirestore,
   collection,
   getDocs,
   addDoc,
   deleteDoc,
-  doc,
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  doc
+} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import {
   getStorage,
   ref,
   uploadBytes,
-  getDownloadURL,
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
 
 // Konfigurasi Firebase
 const firebaseConfig = {
@@ -32,7 +31,8 @@ const firebaseConfig = {
 // Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app, {
-  experimentalForceLongPolling: true, // ✅ solusi error Listen/channel
+  experimentalForceLongPolling: true,
+  useFetchStreams: false
 });
 const storage = getStorage(app);
 
@@ -48,7 +48,7 @@ async function loadData() {
     return;
   }
 
-  body.innerHTML = ""; // kosongkan tabel
+  body.innerHTML = "";
 
   try {
     const querySnapshot = await getDocs(collection(db, "componentLife"));
@@ -105,7 +105,7 @@ document.querySelector("#add-btn")?.addEventListener("click", async () => {
       currentSMU: "",
       nextChange: "",
       life: "",
-      lifePercent: "",
+      lifePercent: ""
     });
     alert("Data berhasil ditambahkan ✅");
     loadData();
@@ -138,7 +138,6 @@ document.querySelector("#upload")?.addEventListener("change", async (e) => {
     const storageRef = ref(storage, "images/" + file.name);
     await uploadBytes(storageRef, file);
     const url = await getDownloadURL(storageRef);
-
     alert("Upload berhasil ✅ URL: " + url);
   } catch (err) {
     console.error("Upload gagal ❌", err);
