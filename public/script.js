@@ -8,7 +8,6 @@ import {
   getDocs,
   addDoc,
   updateDoc,
-  deleteDoc,
   doc,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -28,164 +27,122 @@ const db = getFirestore(app);
 // =========================
 // UI Elements
 // =========================
-const menu1Btn = document.getElementById("menu1");
-const menu2Btn = document.getElementById("menu2");
-const content = document.getElementById("content");
+const menuCompLife = document.getElementById("menu-comp-life");
+const menuUpdateSMU = document.getElementById("menu-update-smu");
+
+const compLifeSection = document.getElementById("comp-life-section");
+const updateSMUSection = document.getElementById("update-smu-section");
+
+const addNewBtn = document.getElementById("add-new");
+const componentBody = document.getElementById("component-body");
+const smuBody = document.getElementById("smu-body");
+const saveSMUBtn = document.getElementById("save-smu");
 
 // =========================
-// Render Functions
+// Navigation
 // =========================
-async function renderMenu1() {
-  content.innerHTML = `
-    <h2>📋 Equipment Data</h2>
-    <button id="addNew">➕ Add New</button>
-    <table border="1" cellpadding="5" cellspacing="0">
-      <thead>
-        <tr>
-          <th>Equipment</th>
-          <th>SMU Last PM</th>
-          <th>Last PM Date</th>
-          <th>Current SMU</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="equipmentTable"></tbody>
-    </table>
-  `;
+menuCompLife.addEventListener("click", () => {
+  compLifeSection.style.display = "block";
+  updateSMUSection.style.display = "none";
+  loadComponents();
+});
 
-  loadEquipment();
+menuUpdateSMU.addEventListener("click", () => {
+  compLifeSection.style.display = "none";
+  updateSMUSection.style.display = "block";
+  loadSMUTable();
+});
 
-  document.getElementById("addNew").addEventListener("click", () => {
-    renderAddForm();
-  });
-}
-
-function renderAddForm() {
-  content.innerHTML = `
-    <h2>➕ Add New Equipment</h2>
-    <form id="addForm">
-      <label>Equipment:</label><br/>
-      <input type="text" id="equipmentId" required/><br/>
-      <label>SMU Last PM:</label><br/>
-      <input type="number" id="smuLastPM" required/><br/>
-      <label>Last PM Date:</label><br/>
-      <input type="date" id="lastPMDate" required/><br/>
-      <button type="submit">Save</button>
-      <button type="button" id="cancelAdd">Cancel</button>
-    </form>
-  `;
-
-  document.getElementById("cancelAdd").addEventListener("click", renderMenu1);
-
-  document.getElementById("addForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const newData = {
-      equipmentId: document.getElementById("equipmentId").value,
-      smuLastPM: parseInt(document.getElementById("smuLastPM").value),
-      lastPMDate: document.getElementById("lastPMDate").value,
-      currentSMU: 0
-    };
-
-    await addDoc(collection(db, "equipment"), newData);
-    renderMenu1();
-  });
-}
-
-async function loadEquipment() {
-  const table = document.getElementById("equipmentTable");
-  table.innerHTML = "";
-
-  const snapshot = await getDocs(collection(db, "equipment"));
+// =========================
+// Load Component Life
+// =========================
+async function loadComponents() {
+  componentBody.innerHTML = "";
+  const snapshot = await getDocs(collection(db, "components"));
   snapshot.forEach((docSnap) => {
     const data = docSnap.data();
-    table.innerHTML += `
+    componentBody.innerHTML += `
       <tr>
-        <td>${data.equipmentId}</td>
-        <td>${data.smuLastPM}</td>
-        <td>${data.lastPMDate}</td>
-        <td>${data.currentSMU}</td>
-        <td>
-          <button onclick="editEquipment('${docSnap.id}')">Edit</button>
-        </td>
+        <td>${data.equipment || ""}</td>
+        <td>${data.model || ""}</td>
+        <td>${data.component || ""}</td>
+        <td>${data.freq || ""}</td>
+        <td>${data.cost || ""}</td>
+        <td>${data.changeOut || ""}</td>
+        <td>${data.rating || ""}</td>
+        <td>${data.remarks || ""}</td>
+        <td>${data.file || ""}</td>
+        <td>${data.currentSMU || 0}</td>
+        <td>${data.nextChange || ""}</td>
+        <td>${data.life || ""}</td>
+        <td>${data.lifePercent || ""}</td>
+        <td><button onclick="editComponent('${docSnap.id}')">Edit</button></td>
       </tr>
     `;
   });
 }
 
-async function editEquipment(id) {
-  const docRef = doc(db, "equipment", id);
-  const docSnap = await getDocs(collection(db, "equipment"));
-  let data;
-  docSnap.forEach((d) => { if (d.id === id) data = d.data(); });
+// =========================
+// Add New Component
+// =========================
+addNewBtn.addEventListener("click", async () => {
+  const equipment = prompt("Equipment ID:");
+  const model = prompt("Model:");
+  const component = prompt("Component:");
+  if (!equipment || !model || !component) return;
 
-  content.innerHTML = `
-    <h2>✏️ Edit Equipment</h2>
-    <form id="editForm">
-      <label>Equipment:</label><br/>
-      <input type="text" id="equipmentId" value="${data.equipmentId}" disabled/><br/>
-      <label>SMU Last PM:</label><br/>
-      <input type="number" id="smuLastPM" value="${data.smuLastPM}" required/><br/>
-      <label>Last PM Date:</label><br/>
-      <input type="date" id="lastPMDate" value="${data.lastPMDate}" required/><br/>
-      <label>Current SMU:</label><br/>
-      <input type="number" id="currentSMU" value="${data.currentSMU}" required/><br/>
-      <button type="submit">Save</button>
-      <button type="button" id="cancelEdit">Cancel</button>
-    </form>
-  `;
+  await addDoc(collection(db, "components"), {
+    equipment,
+    model,
+    component,
+    currentSMU: 0
+  });
+  loadComponents();
+});
 
-  document.getElementById("cancelEdit").addEventListener("click", renderMenu1);
+// =========================
+// Edit Component
+// =========================
+window.editComponent = async function (id) {
+  const ref = doc(db, "components", id);
+  const newSMU = prompt("Update Current SMU:");
+  if (!newSMU) return;
+  await updateDoc(ref, { currentSMU: parseInt(newSMU) });
+  loadComponents();
+};
 
-  document.getElementById("editForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    await updateDoc(docRef, {
-      smuLastPM: parseInt(document.getElementById("smuLastPM").value),
-      lastPMDate: document.getElementById("lastPMDate").value,
-      currentSMU: parseInt(document.getElementById("currentSMU").value)
-    });
-    renderMenu1();
+// =========================
+// Load SMU Table
+// =========================
+async function loadSMUTable() {
+  smuBody.innerHTML = "";
+  const snapshot = await getDocs(collection(db, "components"));
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    smuBody.innerHTML += `
+      <tr>
+        <td>${data.equipment}</td>
+        <td><input type="number" value="${data.currentSMU || 0}" data-id="${docSnap.id}" /></td>
+      </tr>
+    `;
   });
 }
 
 // =========================
-// Menu 2: Update Current SMU
+// Save SMU Updates
 // =========================
-async function renderMenu2() {
-  content.innerHTML = `
-    <h2>⚡ Update Current SMU</h2>
-    <form id="updateForm">
-      <label>Equipment:</label><br/>
-      <input type="text" id="equipmentId" required/><br/>
-      <label>New Current SMU:</label><br/>
-      <input type="number" id="currentSMU" required/><br/>
-      <button type="submit">Update</button>
-    </form>
-  `;
-
-  document.getElementById("updateForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const equipmentId = document.getElementById("equipmentId").value;
-    const currentSMU = parseInt(document.getElementById("currentSMU").value);
-
-    const snapshot = await getDocs(collection(db, "equipment"));
-    snapshot.forEach(async (docSnap) => {
-      const data = docSnap.data();
-      if (data.equipmentId === equipmentId) {
-        const ref = doc(db, "equipment", docSnap.id);
-        await updateDoc(ref, { currentSMU });
-      }
-    });
-
-    renderMenu1();
-  });
-}
+saveSMUBtn.addEventListener("click", async () => {
+  const inputs = smuBody.querySelectorAll("input");
+  for (let input of inputs) {
+    const id = input.getAttribute("data-id");
+    const ref = doc(db, "components", id);
+    await updateDoc(ref, { currentSMU: parseInt(input.value) });
+  }
+  loadComponents();
+  alert("SMU updates saved!");
+});
 
 // =========================
-// Navigation
-// =========================
-menu1Btn.addEventListener("click", renderMenu1);
-menu2Btn.addEventListener("click", renderMenu2);
-
 // Load awal
-renderMenu1();
+// =========================
+loadComponents();
