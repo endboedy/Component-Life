@@ -1,4 +1,4 @@
-  // =========================
+// =========================
 // Firebase Config & Init
 // =========================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -11,6 +11,7 @@ import {
   doc,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// Firebase Config (cek di Firebase Console -> Project Settings -> Config)
 const firebaseConfig = {
   apiKey: "AIzaSyAHQFyRifcuYJYGuiQaK9vvWJpYGfoDdmI",
   authDomain: "component-life.firebaseapp.com",
@@ -18,178 +19,82 @@ const firebaseConfig = {
   storageBucket: "component-life.appspot.com",
   messagingSenderId: "401190574281",
   appId: "1:401190574281:web:16c2401b5bda146779d518",
-  measurementId: "G-77WF4LVS25",
+  measurementId: "G-77WF4LVS25"
 };
 
+// Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-console.log("✅ Firebase terhubung");
-console.log("🔍 Project ID:", firebaseConfig.projectId);
-
 // =========================
-// DOM Ready Wrapper
+// DOM Elements
 // =========================
 document.addEventListener("DOMContentLoaded", () => {
-  // Ambil elemen menu & section
-  const menuCompLife = document.getElementById("menu-comp-life");
-  const menuUpdateSMU = document.getElementById("menu-update-smu");
-  const compLifeSection = document.getElementById("comp-life-section");
-  const updateSMUSection = document.getElementById("update-smu-section");
-  const addNewButton = document.getElementById("add-new");
-  const componentBody = document.getElementById("component-body");
-  const smuBody = document.getElementById("smu-body");
-  const saveSMUButton = document.getElementById("save-smu");
+  const form = document.getElementById("dataForm");
+  const dataList = document.getElementById("dataList");
+
+  if (!form) {
+    console.error("❌ Form dengan ID 'dataForm' tidak ditemukan di HTML.");
+    return;
+  }
+  if (!dataList) {
+    console.error("❌ Element dengan ID 'dataList' tidak ditemukan di HTML.");
+    return;
+  }
 
   // =========================
-  // Fungsi Load Component Life
+  // Load Data dari Firestore
   // =========================
-  async function loadComponents() {
+  async function loadData() {
     try {
+      dataList.innerHTML = "<li>Loading data...</li>";
       const querySnapshot = await getDocs(collection(db, "components"));
-      componentBody.innerHTML = "";
-
+      dataList.innerHTML = "";
       querySnapshot.forEach((docSnap) => {
         const data = docSnap.data();
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-          <td>${data.equipment || ""}</td>
-          <td>${data.model || ""}</td>
-          <td>${data.component || ""}</td>
-          <td>${data.smu || 0}</td>
-          <td>${data.life || 0}</td>
-          <td>${data.remaining || 0}</td>
-          <td>${data.lifePercent || 0}%</td>
-          <td><img src="${data.file || ""}" width="50"></td>
-          <td><button class="edit-btn" data-id="${docSnap.id}">Edit</button></td>
-        `;
-
-        componentBody.appendChild(row);
+        const li = document.createElement("li");
+        li.textContent = `${docSnap.id} → ${JSON.stringify(data)}`;
+        dataList.appendChild(li);
       });
-
-      // Event listener untuk Edit button
-      document.querySelectorAll(".edit-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          const id = e.target.getAttribute("data-id");
-          window.editComponent(id);
-        });
-      });
-    } catch (err) {
-      console.error("❌ Error loadComponents:", err);
-    }
-  }
-
-  // =========================
-  // Fungsi Load SMU Table
-  // =========================
-  async function loadSMUTable() {
-    try {
-      const querySnapshot = await getDocs(collection(db, "components"));
-      smuBody.innerHTML = "";
-
-      querySnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-          <td>${data.equipment || ""}</td>
-          <td>${data.model || ""}</td>
-          <td>${data.smu || 0}</td>
-          <td><input type="number" id="smu-${docSnap.id}" value="${data.smu || 0}"></td>
-        `;
-
-        smuBody.appendChild(row);
-      });
-    } catch (err) {
-      console.error("❌ Error loadSMUTable:", err);
-    }
-  }
-
-  // =========================
-  // Fungsi Edit Component
-  // =========================
-  window.editComponent = async function (id) {
-    try {
-      const newSMU = prompt("Masukkan SMU baru:");
-      if (!newSMU) return;
-
-      await updateDoc(doc(db, "components", id), {
-        smu: parseInt(newSMU),
-      });
-
-      alert("✅ SMU berhasil diperbarui!");
-      loadComponents();
-    } catch (err) {
-      console.error("❌ Error editComponent:", err);
-    }
-  };
-
-  // =========================
-  // Event Listeners Aman
-  // =========================
-  if (menuCompLife) {
-    menuCompLife.addEventListener("click", () => {
-      compLifeSection.style.display = "block";
-      updateSMUSection.style.display = "none";
-      loadComponents();
-    });
-  }
-
-  if (menuUpdateSMU) {
-    menuUpdateSMU.addEventListener("click", () => {
-      compLifeSection.style.display = "none";
-      updateSMUSection.style.display = "block";
-      loadSMUTable();
-    });
-  }
-
-  if (addNewButton) {
-    addNewButton.addEventListener("click", async () => {
-      try {
-        await addDoc(collection(db, "components"), {
-          equipment: "New Equipment",
-          model: "Model X",
-          component: "Engine",
-          smu: 0,
-          life: 10000,
-          remaining: 10000,
-          lifePercent: 100,
-          file: "",
-        });
-
-        alert("✅ Data baru berhasil ditambahkan!");
-        loadComponents();
-      } catch (err) {
-        console.error("❌ Error addNew:", err);
+      if (querySnapshot.empty) {
+        dataList.innerHTML = "<li>Tidak ada data ditemukan</li>";
       }
-    });
-  }
-
-  if (saveSMUButton) {
-    saveSMUButton.addEventListener("click", async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "components"));
-
-        for (const docSnap of querySnapshot.docs) {
-          const input = document.getElementById(`smu-${docSnap.id}`);
-          if (input) {
-            await updateDoc(doc(db, "components", docSnap.id), {
-              smu: parseInt(input.value),
-            });
-          }
-        }
-
-        alert("✅ Semua SMU berhasil diperbarui!");
-        loadSMUTable();
-      } catch (err) {
-        console.error("❌ Error saveSMU:", err);
-      }
-    });
+    } catch (error) {
+      console.error("🔥 Error load data:", error);
+      dataList.innerHTML = `<li style="color:red;">Error load data: ${error.message}</li>`;
+    }
   }
 
   // =========================
-  // Load Awal (Component Life)
+  // Submit Form → Tambah Data
   // =========================
-  loadComponents();
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = form.name?.value.trim();
+    const life = form.life?.value.trim();
+
+    if (!name || !life) {
+      alert("⚠️ Harap isi semua field!");
+      return;
+    }
+
+    try {
+      const docRef = await addDoc(collection(db, "components"), {
+        name: name,
+        life: Number(life),
+        createdAt: new Date().toISOString(),
+      });
+      console.log("✅ Data berhasil ditambahkan dengan ID:", docRef.id);
+      form.reset();
+      loadData();
+    } catch (error) {
+      console.error("🔥 Error tambah data:", error);
+      alert("Gagal menambahkan data: " + error.message);
+    }
+  });
+
+  // =========================
+  // Initial Load
+  // =========================
+  loadData();
 });
