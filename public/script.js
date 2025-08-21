@@ -7,9 +7,9 @@ import {
   collection,
   getDocs,
   addDoc,
-  updateDoc,
   deleteDoc,
   doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -18,14 +18,15 @@ const firebaseConfig = {
   projectId: "YOUR_PROJECT",
   storageBucket: "YOUR_PROJECT.appspot.com",
   messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  appId: "YOUR_APP_ID"
 };
 
+// Inisialisasi Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 console.log("✅ Firebase terhubung");
-console.log("🔍 Project ID:", firebaseConfig.projectId);
+console.log("🔍 Project ID:", firebaseConfig.projectId); // ✅ pakai firebaseConfig langsung
 
 // =========================
 // DOM References
@@ -184,3 +185,4 @@ if (saveSmuBtn) {
 // Default load Menu 1
 // =========================
 loadComponentLife();
+
