@@ -1,4 +1,3 @@
-<script type="module">
   // =========================
   // Firebase Config & Init
   // =========================
@@ -159,3 +158,4 @@
     loadData();
   });
 </script>
+
