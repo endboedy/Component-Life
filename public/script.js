@@ -1,7 +1,7 @@
 // =========================
 // Firebase Config & Init
 // =========================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore,
   collection,
@@ -33,8 +33,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-console.log("Firebase berhasil terhubung ✅");
-console.log("🔍 Project ID:", firebaseConfig.projectId); // pakai dari config
+console.log("✅ Firebase berhasil terhubung");
+console.log("🔍 Project ID:", firebaseConfig.projectId); // ambil langsung dari config
 
 // =========================
 // Load Data dari Firestore
@@ -49,7 +49,8 @@ async function loadData() {
   body.innerHTML = ""; // kosongkan tabel
 
   try {
-    console.log("🔍 Mengambil data dari collection: componentLife"); // Debug
+    console.log("📡 Mengambil data dari collection: componentLife");
+
     const querySnapshot = await getDocs(collection(db, "componentLife"));
 
     if (querySnapshot.empty) {
@@ -58,6 +59,8 @@ async function loadData() {
 
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data();
+      console.log("✅ Data ditemukan:", data);
+
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${data.equipment || ""}</td>
@@ -78,8 +81,10 @@ async function loadData() {
       body.appendChild(row);
     });
   } catch (err) {
-    console.error("❌ Gagal ambil data dari Firestore:", err.code, err.message);
-    console.error("Detail error object:", err);
+    console.error("❌ Gagal ambil data dari Firestore");
+    console.error("Error code:", err.code || "-");
+    console.error("Error message:", err.message || "-");
+    console.error("Detail error:", err);
   }
 }
 
@@ -115,7 +120,7 @@ document.querySelector("#add-btn")?.addEventListener("click", async () => {
     alert("Data berhasil ditambahkan ✅");
     loadData();
   } catch (err) {
-    console.error("Gagal tambah data ❌", err.code, err.message);
+    console.error("❌ Gagal tambah data:", err.code, err.message);
   }
 });
 
@@ -150,7 +155,7 @@ document.querySelector("#upload")?.addEventListener("change", async (e) => {
 
     alert("Upload berhasil ✅ URL: " + url);
   } catch (err) {
-    console.error("Upload gagal ❌", err.code, err.message);
+    console.error("❌ Upload gagal:", err.code, err.message);
   }
 });
 
@@ -183,4 +188,3 @@ service cloud.firestore {
   }
 }
 */
-
