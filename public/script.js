@@ -9,8 +9,15 @@ import {
   addDoc,
   deleteDoc,
   doc,
-  updateDoc
+  updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 // Konfigurasi Firebase
 const firebaseConfig = {
@@ -23,169 +30,64 @@ const firebaseConfig = {
   measurementId: "G-77WF4LVS25"
 };
 
-// Inisialisasi Firebase
+
+// Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 console.log("✅ Firebase terhubung");
-console.log("🔍 Project ID:", firebaseConfig.projectId); // ✅ pakai firebaseConfig langsung
+console.log("🔍 Project ID:", firebaseConfig.projectId);
 
 // =========================
-// DOM References
+// Firestore Functions
 // =========================
-const compLifeSection = document.getElementById("comp-life-section");
-const updateSmuSection = document.getElementById("update-smu-section");
 
-const menuCompLife = document.getElementById("menu-comp-life");
-const menuUpdateSmu = document.getElementById("menu-update-smu");
-
-const addNewBtn = document.getElementById("add-new");
-const saveSmuBtn = document.getElementById("save-smu");
-
-const componentBody = document.getElementById("component-body");
-const smuBody = document.getElementById("smu-body");
-
-// =========================
-// Menu Navigation
-// =========================
-if (menuCompLife) {
-  menuCompLife.addEventListener("click", () => {
-    compLifeSection.style.display = "block";
-    updateSmuSection.style.display = "none";
-    loadComponentLife();
-  });
+// Ambil semua data dari koleksi
+export async function getAllData(collectionName) {
+  const snapshot = await getDocs(collection(db, collectionName));
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
-if (menuUpdateSmu) {
-  menuUpdateSmu.addEventListener("click", () => {
-    compLifeSection.style.display = "none";
-    updateSmuSection.style.display = "block";
-    loadUpdateSmu();
-  });
+// Tambah data baru
+export async function addData(collectionName, data) {
+  const docRef = await addDoc(collection(db, collectionName), data);
+  console.log("✅ Data ditambahkan:", docRef.id);
+  return docRef.id;
+}
+
+// Update data
+export async function updateData(collectionName, id, data) {
+  await updateDoc(doc(db, collectionName, id), data);
+  console.log("✅ Data diupdate:", id);
+}
+
+// Hapus data
+export async function deleteData(collectionName, id) {
+  await deleteDoc(doc(db, collectionName, id));
+  console.log("🗑️ Data dihapus:", id);
 }
 
 // =========================
-// Load Component Life (Menu 1)
+// Storage Functions
 // =========================
-async function loadComponentLife() {
-  componentBody.innerHTML = "";
-  const querySnapshot = await getDocs(collection(db, "componentLife"));
 
-  querySnapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    const tr = document.createElement("tr");
+// Upload file
+export async function uploadFile(path, file) {
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file);
+  console.log("📤 File diupload:", path);
+  return await getDownloadURL(storageRef);
+}
 
-    tr.innerHTML = `
-      <td>${data.Equipment || ""}</td>
-      <td>${data.Model || ""}</td>
-      <td>${data.Component || ""}</td>
-      <td>${data.Freq || ""}</td>
-      <td>${data.Cost || ""}</td>
-      <td>${data.ChangeOut || ""}</td>
-      <td>${data.Rating || ""}</td>
-      <td>${data.Remarks || ""}</td>
-      <td>${data.Picture || ""}</td>
-      <td>${data.CurrentSMU || ""}</td>
-      <td>${data.NextChange || ""}</td>
-      <td>${data.Life || ""}</td>
-      <td>${data.LifePercent || ""}</td>
-      <td>
-        <button class="edit-btn" data-id="${docSnap.id}">✏️ Edit</button>
-        <button class="delete-btn" data-id="${docSnap.id}">🗑️ Delete</button>
-      </td>
-    `;
-
-    componentBody.appendChild(tr);
-  });
-
-  attachActionButtons();
+// Hapus file
+export async function deleteFile(path) {
+  const storageRef = ref(storage, path);
+  await deleteObject(storageRef);
+  console.log("🗑️ File dihapus:", path);
 }
 
 // =========================
-// Add New Component
+// Export
 // =========================
-if (addNewBtn) {
-  addNewBtn.addEventListener("click", async () => {
-    const newData = {
-      Equipment: "NewEq",
-      Model: "NewModel",
-      Component: "NewComponent",
-      Freq: 0,
-      Cost: 0,
-      ChangeOut: "",
-      Rating: "",
-      Remarks: "",
-      Picture: "",
-      CurrentSMU: 0,
-      NextChange: 0,
-      Life: 0,
-      LifePercent: "0%",
-    };
-    await addDoc(collection(db, "componentLife"), newData);
-    loadComponentLife();
-  });
-}
-
-// =========================
-// Edit & Delete
-// =========================
-function attachActionButtons() {
-  document.querySelectorAll(".edit-btn").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const id = e.target.dataset.id;
-      const ref = doc(db, "componentLife", id);
-      await updateDoc(ref, { Remarks: "Updated via UI" });
-      loadComponentLife();
-    });
-  });
-
-  document.querySelectorAll(".delete-btn").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const id = e.target.dataset.id;
-      await deleteDoc(doc(db, "componentLife", id));
-      loadComponentLife();
-    });
-  });
-}
-
-// =========================
-// Load Update SMU (Menu 2)
-// =========================
-async function loadUpdateSmu() {
-  smuBody.innerHTML = "";
-  const querySnapshot = await getDocs(collection(db, "componentLife"));
-
-  querySnapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${data.Equipment || ""}</td>
-      <td><input type="number" value="${data.CurrentSMU || 0}" data-id="${docSnap.id}" class="smu-input"></td>
-    `;
-
-    smuBody.appendChild(tr);
-  });
-}
-
-// =========================
-// Save SMU Updates
-// =========================
-if (saveSmuBtn) {
-  saveSmuBtn.addEventListener("click", async () => {
-    const inputs = document.querySelectorAll(".smu-input");
-    for (let input of inputs) {
-      const id = input.dataset.id;
-      const value = parseInt(input.value);
-      await updateDoc(doc(db, "componentLife", id), { CurrentSMU: value });
-    }
-    loadUpdateSmu();
-  });
-}
-
-// =========================
-// Default load Menu 1
-// =========================
-loadComponentLife();
-
-
+export { db, storage };
