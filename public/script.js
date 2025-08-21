@@ -162,3 +162,5 @@ document.querySelector("#filter-input")?.addEventListener("input", async (e) => 
 document.addEventListener("DOMContentLoaded", () => {
   loadData();
 });
+
+
