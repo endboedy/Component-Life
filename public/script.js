@@ -1,9 +1,7 @@
-// =========================
-// Firebase Config & Init
-// =========================
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
 import {
-  getFirestore,
+  initializeFirestore,
   collection,
   getDocs,
   addDoc,
@@ -17,7 +15,7 @@ import {
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
 
-// Konfigurasi Firebase
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyAHQFyRifcuYJYGuiQaK9vvWJpYGfoDdmI",
   authDomain: "component-life.firebaseapp.com",
@@ -30,20 +28,18 @@ const firebaseConfig = {
 
 // Init Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+  useFetchStreams: false
+});
 const storage = getStorage(app);
 
 console.log("Firebase berhasil terhubung ✅");
 
-// =========================
-// Load Data dari Firestore
-// =========================
+// Load Data
 async function loadData() {
   const body = document.getElementById("component-body");
-  if (!body) {
-    console.error("❌ Element #component-body tidak ditemukan.");
-    return;
-  }
+  if (!body) return;
 
   body.innerHTML = "";
 
@@ -78,9 +74,7 @@ async function loadData() {
   }
 }
 
-// =========================
-// Tambah Data Baru
-// =========================
+// Tambah Data
 document.querySelector("#add-btn")?.addEventListener("click", async () => {
   const equipment = document.getElementById("equipment").value;
   const model = document.getElementById("model").value;
@@ -114,9 +108,7 @@ document.querySelector("#add-btn")?.addEventListener("click", async () => {
   }
 });
 
-// =========================
 // Hapus Data
-// =========================
 document.addEventListener("click", async (e) => {
   if (e.target.classList.contains("delete-btn")) {
     const id = e.target.dataset.id;
@@ -131,9 +123,7 @@ document.addEventListener("click", async (e) => {
   }
 });
 
-// =========================
 // Upload Gambar
-// =========================
 document.querySelector("#upload")?.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -153,9 +143,7 @@ document.querySelector("#upload")?.addEventListener("change", async (e) => {
   }
 });
 
-// =========================
 // Filter Data
-// =========================
 document.querySelector("#filter-input")?.addEventListener("input", async (e) => {
   const keyword = e.target.value.toLowerCase();
   const rows = document.querySelectorAll("#component-body tr");
@@ -165,9 +153,7 @@ document.querySelector("#filter-input")?.addEventListener("input", async (e) => 
   });
 });
 
-// =========================
-// Jalankan loadData setelah DOM siap
-// =========================
+// Load saat DOM siap
 document.addEventListener("DOMContentLoaded", () => {
   loadData();
 });
