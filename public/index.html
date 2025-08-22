@@ -2,229 +2,261 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Component Life EM</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin:20px; background:#f4f6f9; }
+    h1 { text-align:center; color:#2c3e50; }
+    nav { text-align:center; margin-bottom:20px; }
+    nav button { margin:5px; padding:10px 20px; border:none; border-radius:8px; background:#3498db; color:white; cursor:pointer; }
+    nav button:hover { background:#2980b9; }
+    table { width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    th, td { border:1px solid #ddd; padding:8px; text-align:center; }
+    th { background:#2c3e50; color:white; }
+    tr:nth-child(even) { background:#f9f9f9; }
+    button.action { padding:4px 8px; margin:2px; border:none; border-radius:5px; cursor:pointer; }
+    .edit { background:#f39c12; color:white; }
+    .save { background:#27ae60; color:white; }
+    .delete { background:#e74c3c; color:white; }
+    .add-row { background:#2ecc71; color:white; padding:8px 12px; margin-top:10px; border:none; border-radius:8px; cursor:pointer; }
+    #menu-smu textarea { width:100%; border-radius:6px; padding:10px; }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body>
 
-  <!-- Header -->
-  <header class="bg-blue-700 text-white py-4 shadow-lg">
-    <h1 class="text-center text-2xl font-bold">📊 Component Life EM</h1>
-  </header>
+<h1>Component Life EM</h1>
 
-  <!-- Menu -->
-  <nav class="flex justify-center space-x-6 bg-blue-100 py-3 shadow">
-    <button onclick="showMenu('monitoring')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Monitoring Component</button>
-    <button onclick="showMenu('smu')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Current SMU (Update)</button>
-  </nav>
+<nav>
+  <button onclick="showMenu('menu-monitoring')">Monitoring Component</button>
+  <button onclick="showMenu('menu-smu')">Current SMU (Update SMU Multi)</button>
+</nav>
 
-  <!-- Monitoring Component -->
-  <section id="monitoring" class="p-6">
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-semibold">📋 Monitoring Component</h2>
-      <button onclick="openAddForm()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">+ Tambah Data</button>
-    </div>
+<!-- Monitoring Component -->
+<div id="menu-monitoring">
+  <button class="add-row" onclick="addRow()">+ Tambah Data</button>
+  <table id="componentTable">
+    <thead>
+      <tr>
+        <th>Equipment</th>
+        <th>Model</th>
+        <th>Component</th>
+        <th>Freq</th>
+        <th>Cost</th>
+        <th>Change Out</th>
+        <th>Current SMU</th>
+        <th>Next Change</th>
+        <th>Life</th>
+        <th>Life %</th>
+        <th>Picture</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="componentBody"></tbody>
+  </table>
+</div>
 
-    <div class="overflow-x-auto bg-white rounded-lg shadow-lg">
-      <table class="min-w-full border border-gray-300">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="border px-3 py-2">Equipment</th>
-            <th class="border px-3 py-2">Model</th>
-            <th class="border px-3 py-2">Component</th>
-            <th class="border px-3 py-2">Freq</th>
-            <th class="border px-3 py-2">Cost</th>
-            <th class="border px-3 py-2">Change Out</th>
-            <th class="border px-3 py-2">Current SMU</th>
-            <th class="border px-3 py-2">Next Change</th>
-            <th class="border px-3 py-2">Life</th>
-            <th class="border px-3 py-2">Life %</th>
-            <th class="border px-3 py-2">Picture</th>
-            <th class="border px-3 py-2">Action</th>
-          </tr>
-        </thead>
-        <tbody id="componentTable" class="text-center"></tbody>
-      </table>
-    </div>
-  </section>
+<!-- Update SMU Multi -->
+<div id="menu-smu" style="display:none;">
+  <h2>Update Current SMU (Multi)</h2>
+  <textarea id="bulkSMU" rows="8" placeholder="CO4402 1234&#10;CO4356 2341&#10;CO4432 3412"></textarea>
+  <br><br>
+  <button id="updateSMUMulti">Update All</button>
+  <div id="updateStatus"></div>
+</div>
 
-  <!-- Current SMU -->
-  <section id="smu" class="p-6 hidden">
-    <h2 class="text-xl font-semibold mb-4">⚙️ Update Current SMU</h2>
-    <form id="smuForm" class="bg-white p-4 rounded-lg shadow-lg space-y-4">
-      <div>
-        <label class="block font-semibold">Equipment ID</label>
-        <input id="smuEquipment" type="text" class="border p-2 w-full rounded-lg">
-      </div>
-      <div>
-        <label class="block font-semibold">Current SMU</label>
-        <input id="smuValue" type="number" class="border p-2 w-full rounded-lg">
-      </div>
-      <button type="button" onclick="updateSMU()" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">Update SMU</button>
-    </form>
-  </section>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-  <!-- Add/Edit Form -->
-  <div id="formModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-      <h3 class="text-lg font-semibold mb-4">Tambah / Edit Component</h3>
-      <form id="componentForm" class="space-y-3">
-        <input type="hidden" id="docId">
-        <input id="equipment" placeholder="Equipment" class="border p-2 w-full rounded-lg">
-        <input id="model" placeholder="Model" class="border p-2 w-full rounded-lg">
-        <input id="component" placeholder="Component" class="border p-2 w-full rounded-lg">
-        <input id="freq" placeholder="Freq" type="number" class="border p-2 w-full rounded-lg">
-        <input id="cost" placeholder="Cost" type="number" class="border p-2 w-full rounded-lg">
-        <input id="changeOut" placeholder="Change Out" type="number" class="border p-2 w-full rounded-lg">
-        <label class="block">Picture:</label>
-        <input id="picture" type="file" accept="image/*" class="w-full">
-        <button type="button" onclick="saveComponent()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Save</button>
-        <button type="button" onclick="closeForm()" class="w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600">Cancel</button>
-      </form>
-    </div>
-  </div>
+  // === Firebase Config ===
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-  <!-- JS -->
-  <script>
-    // === Firebase Config (ganti dengan projectmu) ===
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+  // === Switch Menu ===
+  function showMenu(menu) {
+    document.getElementById("menu-monitoring").style.display = "none";
+    document.getElementById("menu-smu").style.display = "none";
+    document.getElementById(menu).style.display = "block";
+  }
+  window.showMenu = showMenu;
+
+  // === Load Data ===
+  async function loadData() {
+    const tbody = document.getElementById("componentBody");
+    tbody.innerHTML = "";
+    const snapshot = await getDocs(collection(db, "componentLife"));
+    snapshot.forEach(docu => {
+      const d = docu.data();
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${d.equipment || ""}</td>
+        <td>${d.model || ""}</td>
+        <td>${d.component || ""}</td>
+        <td>${d.freq || ""}</td>
+        <td>${d.cost || ""}</td>
+        <td>${d.changeOut || ""}</td>
+        <td>${d.currentSMU || ""}</td>
+        <td>${d.nextChange || ""}</td>
+        <td>${d.life || ""}</td>
+        <td>${d.lifePercent || ""}</td>
+        <td>${d.picture ? `<img src="${d.picture}" width="50">` : ""}</td>
+        <td>
+          <button class="action edit" onclick="editRow('${docu.id}')">Edit</button>
+          <button class="action delete" onclick="deleteRow('${docu.id}')">Delete</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  loadData();
+
+  // === Add Row ===
+  function addRow() {
+    const tbody = document.getElementById("componentBody");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input></td>
+      <td><input></td>
+      <td><input></td>
+      <td><input type="number"></td>
+      <td><input type="number"></td>
+      <td><input type="number"></td>
+      <td><input type="number"></td>
+      <td>-</td><td>-</td><td>-</td>
+      <td><input type="file"></td>
+      <td><button class="action save" onclick="saveNewRow(this)">Save</button></td>`;
+    tbody.prepend(tr);
+  }
+  window.addRow = addRow;
+
+  // === Save New Row ===
+  async function saveNewRow(btn) {
+    const tr = btn.parentElement.parentElement;
+    const inputs = tr.querySelectorAll("input");
+    const data = {
+      equipment: inputs[0].value || "",
+      model: inputs[1].value || "",
+      component: inputs[2].value || "",
+      freq: parseInt(inputs[3].value) || 0,
+      cost: parseFloat(inputs[4].value) || 0,
+      changeOut: parseInt(inputs[5].value) || 0,
+      currentSMU: parseInt(inputs[6].value) || 0,
     };
+    data.nextChange = data.currentSMU + data.freq;
+    data.life = data.currentSMU - data.changeOut;
+    data.lifePercent = data.freq > 0 ? ((data.life / data.freq) * 100).toFixed(1) : 0;
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const storage = firebase.storage();
+    await addDoc(collection(db, "componentLife"), data);
+    loadData();
+  }
+  window.saveNewRow = saveNewRow;
 
-    // === Toggle Menu ===
-    function showMenu(menu) {
-      document.getElementById("monitoring").classList.add("hidden");
-      document.getElementById("smu").classList.add("hidden");
-      document.getElementById(menu).classList.remove("hidden");
-    }
-
-    // === Modal ===
-    function openAddForm() {
-      document.getElementById("formModal").classList.remove("hidden");
-      document.getElementById("componentForm").reset();
-      document.getElementById("docId").value = "";
-    }
-    function closeForm() {
-      document.getElementById("formModal").classList.add("hidden");
-    }
-
-    // === Save Component ===
-    async function saveComponent() {
-      const docId = document.getElementById("docId").value;
-      const equipment = document.getElementById("equipment").value;
-      const model = document.getElementById("model").value;
-      const component = document.getElementById("component").value;
-      const freq = parseInt(document.getElementById("freq").value) || 0;
-      const cost = parseInt(document.getElementById("cost").value) || 0;
-      const changeOut = parseInt(document.getElementById("changeOut").value) || 0;
-      const file = document.getElementById("picture").files[0];
-
-      let pictureUrl = "";
-      if (file) {
-        const storageRef = storage.ref("pictures/" + file.name);
-        await storageRef.put(file);
-        pictureUrl = await storageRef.getDownloadURL();
-      }
-
-      const data = { equipment, model, component, freq, cost, changeOut, picture: pictureUrl };
-
-      if (docId) {
-        await db.collection("components").doc(docId).update(data);
-      } else {
-        await db.collection("components").add(data);
-      }
-
-      closeForm();
-      loadComponents();
-    }
-
-    // === Load Components ===
-    async function loadComponents() {
-      const snapshot = await db.collection("components").get();
-      const table = document.getElementById("componentTable");
-      table.innerHTML = "";
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const currentSMU = data.currentSMU || 0;
-        const nextChange = currentSMU + (data.freq || 0);
-        const life = currentSMU - (data.changeOut || 0);
-        const lifePct = data.freq ? ((life / data.freq) * 100).toFixed(1) : 0;
-
-        table.innerHTML += `
-          <tr>
-            <td class="border px-3 py-2">${data.equipment}</td>
-            <td class="border px-3 py-2">${data.model}</td>
-            <td class="border px-3 py-2">${data.component}</td>
-            <td class="border px-3 py-2">${data.freq}</td>
-            <td class="border px-3 py-2">${data.cost}</td>
-            <td class="border px-3 py-2">${data.changeOut}</td>
-            <td class="border px-3 py-2">${currentSMU}</td>
-            <td class="border px-3 py-2">${nextChange}</td>
-            <td class="border px-3 py-2">${life}</td>
-            <td class="border px-3 py-2">${lifePct}%</td>
-            <td class="border px-3 py-2">
-              ${data.picture ? `<img src="${data.picture}" class="h-12 mx-auto">` : "-"}
-            </td>
-            <td class="border px-3 py-2 space-x-2">
-              <button onclick="editComponent('${doc.id}')" class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
-              <button onclick="deleteComponent('${doc.id}')" class="bg-red-600 text-white px-2 py-1 rounded">Delete</button>
-            </td>
-          </tr>
-        `;
+  // === Edit Row ===
+  async function editRow(id) {
+    const q = query(collection(db, "componentLife"), where("__name__", "==", id));
+    const snap = await getDocs(q);
+    snap.forEach(docu => {
+      const d = docu.data();
+      const tbody = document.getElementById("componentBody");
+      tbody.querySelectorAll("tr").forEach(row => {
+        if (row.innerText.includes(d.equipment)) {
+          row.innerHTML = `
+            <td><input value="${d.equipment}"></td>
+            <td><input value="${d.model}"></td>
+            <td><input value="${d.component}"></td>
+            <td><input type="number" value="${d.freq}"></td>
+            <td><input type="number" value="${d.cost}"></td>
+            <td><input type="number" value="${d.changeOut}"></td>
+            <td><input type="number" value="${d.currentSMU}"></td>
+            <td>-</td><td>-</td><td>-</td>
+            <td><input type="file"></td>
+            <td><button class="action save" onclick="saveEditRow('${id}', this)">Save</button></td>`;
+        }
       });
+    });
+  }
+  window.editRow = editRow;
+
+  // === Save Edited Row ===
+  async function saveEditRow(id, btn) {
+    const tr = btn.parentElement.parentElement;
+    const inputs = tr.querySelectorAll("input");
+    const data = {
+      equipment: inputs[0].value || "",
+      model: inputs[1].value || "",
+      component: inputs[2].value || "",
+      freq: parseInt(inputs[3].value) || 0,
+      cost: parseFloat(inputs[4].value) || 0,
+      changeOut: parseInt(inputs[5].value) || 0,
+      currentSMU: parseInt(inputs[6].value) || 0,
+    };
+    data.nextChange = data.currentSMU + data.freq;
+    data.life = data.currentSMU - data.changeOut;
+    data.lifePercent = data.freq > 0 ? ((data.life / data.freq) * 100).toFixed(1) : 0;
+
+    await updateDoc(doc(db, "componentLife", id), data);
+    loadData();
+  }
+  window.saveEditRow = saveEditRow;
+
+  // === Delete Row ===
+  async function deleteRow(id) {
+    await deleteDoc(doc(db, "componentLife", id));
+    loadData();
+  }
+  window.deleteRow = deleteRow;
+
+  // === Update SMU Multi ===
+  document.getElementById("updateSMUMulti").addEventListener("click", async () => {
+    const bulkText = document.getElementById("bulkSMU").value.trim();
+    const statusDiv = document.getElementById("updateStatus");
+    statusDiv.innerHTML = "Processing... ⏳";
+
+    if (!bulkText) {
+      statusDiv.innerHTML = "⚠️ Data kosong!";
+      return;
     }
 
-    // === Edit Component ===
-    async function editComponent(id) {
-      const docSnap = await db.collection("components").doc(id).get();
-      const data = docSnap.data();
-      document.getElementById("docId").value = id;
-      document.getElementById("equipment").value = data.equipment;
-      document.getElementById("model").value = data.model;
-      document.getElementById("component").value = data.component;
-      document.getElementById("freq").value = data.freq;
-      document.getElementById("cost").value = data.cost;
-      document.getElementById("changeOut").value = data.changeOut;
-      document.getElementById("formModal").classList.remove("hidden");
-    }
+    const lines = bulkText.split("\n");
+    let success = 0, fail = 0;
 
-    // === Delete Component ===
-    async function deleteComponent(id) {
-      if (confirm("Yakin hapus data ini?")) {
-        await db.collection("components").doc(id).delete();
-        loadComponents();
+    for (let line of lines) {
+      const parts = line.trim().split(/\s+/);
+      if (parts.length < 2) continue;
+
+      const equipment = parts[0];
+      const smu = parseInt(parts[1]);
+
+      try {
+        const q = query(collection(db, "componentLife"), where("equipment", "==", equipment));
+        const snap = await getDocs(q);
+
+        if (!snap.empty) {
+          snap.forEach(async (docu) => {
+            await updateDoc(doc(db, "componentLife", docu.id), {
+              currentSMU: smu,
+              nextChange: smu + (docu.data().freq || 0),
+              life: smu - (docu.data().changeOut || 0),
+              lifePercent: ((smu - (docu.data().changeOut || 0)) / (docu.data().freq || 1) * 100).toFixed(1)
+            });
+          });
+          success++;
+        } else {
+          fail++;
+        }
+      } catch (err) {
+        console.error("Gagal update", equipment, err);
+        fail++;
       }
     }
 
-    // === Update SMU ===
-    async function updateSMU() {
-      const equipment = document.getElementById("smuEquipment").value;
-      const smuValue = parseInt(document.getElementById("smuValue").value) || 0;
-
-      const snapshot = await db.collection("components").where("equipment", "==", equipment).get();
-      snapshot.forEach(async doc => {
-        await db.collection("components").doc(doc.id).update({ currentSMU: smuValue });
-      });
-
-      alert("SMU berhasil diupdate ✅");
-      loadComponents();
-    }
-
-    // === Init Load ===
-    loadComponents();
-  </script>
+    statusDiv.innerHTML = `✅ Sukses update: ${success}, ❌ Gagal: ${fail}`;
+  });
+</script>
 </body>
 </html>
