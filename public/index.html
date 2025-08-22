@@ -1,109 +1,362 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Component Life EM</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-  body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
-  .tab-menu { margin-bottom: 20px; }
-  .tab-menu button { margin-right: 10px; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
-  th { background-color: #007BFF; color: white; cursor: pointer; }
-  td.number { text-align: right; }
-  .life-red { background-color: red; color: white; }
-  .life-orange { background-color: orange; color: white; }
-  .life-green { background-color: green; color: white; }
-  .life-yellow { background-color: yellow; color: black; }
-  .lifepercent-red { background-color: red; color: white; }
-  .lifepercent-orange { background-color: orange; color: white; }
-  .lifepercent-green { background-color: green; color: white; }
-  .lifepercent-yellow { background-color: yellow; color: black; }
-  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-  .modal-content { background-color: white; margin: 10% auto; padding: 20px; width: 400px; border-radius: 10px; }
-  .close { float: right; cursor: pointer; font-weight: bold; }
-  .progress { height: 20px; margin-top: 10px; }
-  .hidden { display: none; }
-</style>
+  <meta charset="UTF-8" />
+  <title>Component Life EM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f4f6f9; --card:#fff; --text:#2c3e50; --muted:#6b7280;
+      --primary:#2563eb; --primary-d:#1d4ed8;
+      --good:#16a34a; --warn:#f59e0b; --bad:#ef4444;
+      --soft:#e5e7eb;
+    }
+    *{box-sizing:border-box}
+    body{font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;background:var(--bg);color:var(--text);margin:0;padding:24px}
+    h1{margin:0 0 12px}
+    nav{display:flex;gap:8px;margin-bottom:16px}
+    nav button{border:none;background:var(--primary);color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer}
+    nav button:hover{background:var(--primary-d)}
+    .card{background:var(--card);border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.06);padding:16px}
+    .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+    .toolbar input[type="text"], .toolbar input[type="number"]{padding:8px 10px;border:1px solid var(--soft);border-radius:8px;min-width:160px}
+    .toolbar input[type="file"]{font-size:12px}
+    .toolbar button{border:none;padding:9px 12px;border-radius:8px;cursor:pointer}
+    .btn{background:var(--primary);color:#fff}
+    .btn:hover{background:var(--primary-d)}
+    .btn-ghost{background:#eef2ff;color:#1e40af}
+    .table-wrap{overflow:auto;border:1px solid var(--soft);border-radius:12px}
+    table{min-width:1100px;width:100%;border-collapse:collapse}
+    thead th{position:sticky;top:0;background:#111827;color:#f9fafb}
+    th, td{border-bottom:1px solid var(--soft);padding:8px 10px;text-align:left;font-weight:400;font-size:13px}
+    tbody tr:nth-child(even){background:#fafafa}
+    td img{border-radius:6px}
+    .actions button{border:none;border-radius:6px;padding:6px 10px;margin-right:6px;cursor:pointer}
+    .edit{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+    .save{background:#ecfdf5;color:#065f46;border:1px solid #bbf7d0}
+    .delete{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+    .hint{color:var(--muted);font-size:12px}
+    .hidden{display:none}
+    textarea{width:100%;padding:10px;border:1px solid var(--soft);border-radius:8px}
+    .status{margin-top:8px;font-size:13px}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef2ff;color:#1e40af;font-size:12px}
+    .grid{display:grid;grid-template-columns:1fr;gap:16px}
+    @media (min-width:960px){.grid{grid-template-columns:1fr 1fr}}
+  </style>
 </head>
 <body>
+  <h1>Component Life EM</h1>
+  <div class="hint">Monitoring komponen & pembaruan SMU massal</div>
 
-<h2>Component Life EM</h2>
+  <nav>
+    <button id="btnMonitoring">Monitoring Component</button>
+    <button id="btnSMU">Current SMU (Update SMU Multi)</button>
+    <span class="badge" id="projectInfo"></span>
+  </nav>
 
-<div class="tab-menu">
-  <button id="menu1-btn" class="btn btn-primary">Monitoring Component</button>
-  <button id="menu2-btn" class="btn btn-secondary">Current SMU (Update Multi)</button>
-</div>
+  <!-- Monitoring -->
+  <section id="viewMonitoring" class="card">
+    <div class="toolbar">
+      <input type="text" id="filter" placeholder="Filter…" />
+      <button class="btn-ghost" id="refresh">Refresh</button>
+      <span class="hint">Klik “Tambah Baris” untuk input cepat. Field kosong tetap bisa disimpan.</span>
+      <div style="margin-left:auto"></div>
+      <button class="btn" id="addRow">+ Tambah Baris</button>
+    </div>
 
-<!-- Menu 1 -->
-<div id="menu1" class="menu">
-  <div class="mb-3">
-    <input type="text" id="filter-equipment" placeholder="Filter Equipment" class="form-control" style="width:200px; display:inline-block;">
-    <input type="text" id="filter-component" placeholder="Filter Component" class="form-control" style="width:200px; display:inline-block;">
-    <button id="filter-btn" class="btn btn-info">Filter</button>
-    <button id="add-btn" class="btn btn-success">Tambah Data</button>
-  </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Equipment</th>
+            <th>Model</th>
+            <th>Component</th>
+            <th>Freq</th>
+            <th>Cost</th>
+            <th>Change Out</th>
+            <th>Current SMU</th>
+            <th>Next Change</th>
+            <th>Life</th>
+            <th>Life %</th>
+            <th>Picture</th>
+            <th style="min-width:180px">Action</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
 
-  <table id="component-table">
-    <thead>
-      <tr>
-        <th>Equipment</th>
-        <th>Model</th>
-        <th>Component</th>
-        <th>Freq</th>
-        <th>Cost</th>
-        <th>Change Out</th>
-        <th>Current SMU</th>
-        <th>Next Change</th>
-        <th>Life</th>
-        <th>Life %</th>
-        <th>Rating</th>
-        <th>Remarks</th>
-        <th>Picture</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="component-body">
-      <!-- Data Firestore akan muncul disini -->
-    </tbody>
-  </table>
-</div>
+  <!-- Update SMU Multi -->
+  <section id="viewSMU" class="card hidden">
+    <div class="grid">
+      <div>
+        <h3>Update Current SMU (Massal)</h3>
+        <textarea id="bulkSMU" rows="10" placeholder="CO4402 1234&#10;CO4356 2341&#10;CO4432 3412"></textarea>
+        <div class="toolbar">
+          <button class="btn" id="runBulk">Update All</button>
+          <span class="hint">Format: <code>Equipment SMU</code> dipisah spasi/Tab, satu per baris.</span>
+        </div>
+        <div class="status" id="bulkStatus"></div>
+      </div>
+      <div>
+        <h3>Panduan Perhitungan</h3>
+        <ul class="hint">
+          <li><b>Next Change</b> = Current SMU + Freq</li>
+          <li><b>Life</b> = Current SMU - Change Out</li>
+          <li><b>Life %</b> = (Life / Freq) × 100</li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
-<!-- Menu 2 -->
-<div id="menu2" class="menu hidden">
-  <h5>Update Current SMU (Multi)</h5>
-  <textarea id="smu-input" rows="6" class="form-control" placeholder="Masukkan Equipment & SMU, contoh: CO4402 1234"></textarea>
-  <button id="update-smu-btn" class="btn btn-success mt-2">Update SMU</button>
-  <div class="progress mt-2 hidden" id="update-progress">
-    <div class="progress-bar" role="progressbar" style="width:0%">0%</div>
-  </div>
-</div>
+  <!-- === Firebase + App (ESM) === -->
+  <script type="module">
+    /********** Firebase ESM imports **********/
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where
+    } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+    import {
+      getStorage, ref, uploadBytes, getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
 
-<!-- Modal Tambah Data -->
-<div id="add-modal" class="modal">
-  <div class="modal-content">
-    <span class="close" id="add-close">&times;</span>
-    <h5>Tambah Data</h5>
-    <input type="text" id="modal-equipment" placeholder="Equipment" class="form-control mb-1">
-    <input type="text" id="modal-model" placeholder="Model" class="form-control mb-1">
-    <input type="text" id="modal-component" placeholder="Component" class="form-control mb-1">
-    <input type="number" id="modal-freq" placeholder="Freq" class="form-control mb-1">
-    <input type="number" id="modal-cost" placeholder="Cost" class="form-control mb-1">
-    <input type="number" id="modal-changeOut" placeholder="Change Out" class="form-control mb-1">
-    <input type="text" id="modal-rating" placeholder="Rating" class="form-control mb-1">
-    <input type="text" id="modal-remarks" placeholder="Remarks" class="form-control mb-1">
-    <input type="file" id="modal-picture" class="form-control mb-2">
-    <button id="modal-save" class="btn btn-success">Save</button>
-    <button id="modal-cancel" class="btn btn-danger">Cancel</button>
-  </div>
-</div>
+    /********** Firebase Config (punyamu) **********/
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHQFyRifcuYJYGuiQaK9vvWJpYGfoDdmI",
+      authDomain: "component-life.firebaseapp.com",
+      projectId: "component-life",
+      storageBucket: "component-life.appspot.com",
+      messagingSenderId: "401190574281",
+      appId: "1:401190574281:web:16c2401b5bda146779d518",
+      measurementId: "G-77WF4LVS25"
+    };
 
-<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js"></script>
-<script src="script.js"></script>
+    /********** Init **********/
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    console.log("Firebase tersambung ✅");
+    document.getElementById("projectInfo").textContent = firebaseConfig.projectId;
 
+    /********** Helpers **********/
+    const $ = sel => document.querySelector(sel);
+    const tbody = $("#tbody");
+
+    const calcDerived = (o) => {
+      const freq = Number(o.freq||0);
+      const cur  = Number(o.currentSMU||0);
+      const co   = Number(o.changeOut||0);
+      const next = cur + freq;
+      const life = cur - co;
+      const pct  = freq>0 ? ((life/freq)*100).toFixed(1) : 0;
+      return { nextChange: next, life, lifePercent: pct };
+    };
+
+    const rowHTML = (id, d) => {
+      return `
+        <tr data-id="${id}">
+          <td>${d.equipment ?? ""}</td>
+          <td>${d.model ?? ""}</td>
+          <td>${d.component ?? ""}</td>
+          <td>${d.freq ?? 0}</td>
+          <td>${d.cost ?? 0}</td>
+          <td>${d.changeOut ?? 0}</td>
+          <td>${d.currentSMU ?? 0}</td>
+          <td>${d.nextChange ?? 0}</td>
+          <td>${d.life ?? 0}</td>
+          <td>${d.lifePercent ?? 0}</td>
+          <td>${d.picture ? `<img src="${d.picture}" width="52" height="40" loading="lazy">` : ""}</td>
+          <td class="actions">
+            <button class="edit" data-act="edit">Edit</button>
+            <button class="delete" data-act="delete">Delete</button>
+          </td>
+        </tr>
+      `;
+    };
+
+    const rowEditHTML = (id, d) => {
+      return `
+        <tr data-id="${id}">
+          <td><input value="${d.equipment ?? ""}" data-f="equipment"></td>
+          <td><input value="${d.model ?? ""}" data-f="model"></td>
+          <td><input value="${d.component ?? ""}" data-f="component"></td>
+          <td><input type="number" value="${d.freq ?? 0}" data-f="freq"></td>
+          <td><input type="number" value="${d.cost ?? 0}" data-f="cost" step="0.01"></td>
+          <td><input type="number" value="${d.changeOut ?? 0}" data-f="changeOut"></td>
+          <td><input type="number" value="${d.currentSMU ?? 0}" data-f="currentSMU"></td>
+          <td class="hint">otomatis</td>
+          <td class="hint">otomatis</td>
+          <td class="hint">otomatis</td>
+          <td><input type="file" data-f="pictureFile" accept="image/*"></td>
+          <td class="actions">
+            <button class="save" data-act="save">Save</button>
+            <button class="delete" data-act="cancel">Cancel</button>
+          </td>
+        </tr>
+      `;
+    };
+
+    /********** Load data **********/
+    async function loadData() {
+      tbody.innerHTML = "";
+      const snap = await getDocs(collection(db, "componentLife"));
+      snap.forEach(docu => {
+        const d = docu.data();
+        tbody.insertAdjacentHTML("beforeend", rowHTML(docu.id, d));
+      });
+    }
+
+    /********** Filtering **********/
+    $("#filter").addEventListener("input", (e)=>{
+      const q = e.target.value.toLowerCase();
+      tbody.querySelectorAll("tr").forEach(tr=>{
+        tr.style.display = tr.innerText.toLowerCase().includes(q) ? "" : "none";
+      });
+    });
+
+    /********** Add row (inline, field kosong boleh) **********/
+    $("#addRow").addEventListener("click", ()=>{
+      const empty = {
+        equipment:"", model:"", component:"",
+        freq:0, cost:0, changeOut:0, currentSMU:0, picture:""
+      };
+      tbody.insertAdjacentHTML("afterbegin", rowEditHTML("__new__", empty));
+    });
+
+    /********** Row clicks (edit/save/delete/cancel) **********/
+    tbody.addEventListener("click", async (e)=>{
+      const btn = e.target.closest("button");
+      if(!btn) return;
+      const act = btn.dataset.act;
+      const tr  = btn.closest("tr");
+      const id  = tr.dataset.id;
+
+      // edit
+      if(act==="edit"){
+        // ambil data dari tampilan saat ini
+        const tds = tr.querySelectorAll("td");
+        const cur = {
+          equipment: tds[0].textContent.trim(),
+          model:     tds[1].textContent.trim(),
+          component: tds[2].textContent.trim(),
+          freq:      Number(tds[3].textContent.trim()||0),
+          cost:      Number(tds[4].textContent.trim()||0),
+          changeOut: Number(tds[5].textContent.trim()||0),
+          currentSMU:Number(tds[6].textContent.trim()||0),
+          picture:   tr.querySelector("img")?.src || ""
+        };
+        tr.outerHTML = rowEditHTML(id, cur);
+        return;
+      }
+
+      // cancel (kembalikan tampilan read-only)
+      if(act==="cancel"){
+        if(id==="__new__"){ tr.remove(); return; }
+        const ref = doc(db,"componentLife",id);
+        const d   = (await (await getDocs(query(collection(db,"componentLife"), where("__name__","==",id)))).docs[0]).data();
+        tr.outerHTML = rowHTML(id, d);
+        return;
+      }
+
+      // save (tambah baru atau update)
+      if(act==="save"){
+        // kumpulkan nilai input
+        const inputs = tr.querySelectorAll("input");
+        const obj = {};
+        inputs.forEach(i=>{
+          const f = i.dataset.f;
+          if(f==="pictureFile") return; // file handle terpisah
+          if(["freq","cost","changeOut","currentSMU"].includes(f)){
+            obj[f] = i.value==="" ? 0 : Number(i.value);
+          }else{
+            obj[f] = i.value ?? "";
+          }
+        });
+
+        // hitung turunan
+        Object.assign(obj, calcDerived(obj));
+
+        // handle upload gambar (opsional)
+        const fileInput = tr.querySelector('input[data-f="pictureFile"]');
+        if(fileInput && fileInput.files && fileInput.files[0]){
+          const file = fileInput.files[0];
+          const key = `images/${Date.now()}-${file.name}`;
+          const sref = ref(storage, key);
+          await uploadBytes(sref, file);
+          const url = await getDownloadURL(sref);
+          obj.picture = url;
+        }
+
+        if(id==="__new__"){
+          // simpan dok baru (field kosong dipersilakan)
+          const docRef = await addDoc(collection(db,"componentLife"), obj);
+          tr.outerHTML = rowHTML(docRef.id, obj);
+        }else{
+          await updateDoc(doc(db,"componentLife",id), obj);
+          tr.outerHTML = rowHTML(id, obj);
+        }
+        return;
+      }
+
+      // delete
+      if(act==="delete"){
+        if(id==="__new__"){ tr.remove(); return; }
+        if(confirm("Hapus baris ini?")){
+          await deleteDoc(doc(db,"componentLife",id));
+          tr.remove();
+        }
+        return;
+      }
+    });
+
+    /********** Refresh **********/
+    $("#refresh").addEventListener("click", loadData);
+
+    /********** Menu switching **********/
+    const viewMonitoring = $("#viewMonitoring");
+    const viewSMU = $("#viewSMU");
+    const showMonitoring = ()=>{ viewMonitoring.classList.remove("hidden"); viewSMU.classList.add("hidden"); };
+    const showSMU = ()=>{ viewSMU.classList.remove("hidden"); viewMonitoring.classList.add("hidden"); };
+    $("#btnMonitoring").addEventListener("click", showMonitoring);
+    $("#btnSMU").addEventListener("click", showSMU);
+
+    /********** Bulk SMU update **********/
+    $("#runBulk").addEventListener("click", async ()=>{
+      const text = $("#bulkSMU").value.trim();
+      const status = $("#bulkStatus");
+      if(!text){ status.textContent="⚠️ Data kosong."; return; }
+
+      const lines = text.split(/\r?\n/);
+      let ok=0, fail=0;
+      for(const line of lines){
+        const [equipment, smuStr] = line.trim().split(/\s+/);
+        if(!equipment || !smuStr){ fail++; continue; }
+        const smu = Number(smuStr);
+        try{
+          const q = query(collection(db,"componentLife"), where("equipment","==",equipment));
+          const snap = await getDocs(q);
+          if(snap.empty){ fail++; continue; }
+          for(const d of snap.docs){
+            const cur = d.data();
+            const payload = {
+              currentSMU: smu,
+              ...calcDerived({ freq: cur.freq||0, changeOut: cur.changeOut||0, currentSMU: smu })
+            };
+            await updateDoc(doc(db,"componentLife", d.id), payload);
+            ok++;
+          }
+        }catch(e){
+          console.error("Gagal update", equipment, e);
+          fail++;
+        }
+      }
+      status.textContent = `✅ Sukses: ${ok} • ❌ Gagal: ${fail}`;
+      await loadData();
+    });
+
+    // start
+    await loadData();
+  </script>
 </body>
 </html>
