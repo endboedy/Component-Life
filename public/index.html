@@ -1,215 +1,230 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Component Life EM</title>
-  <style>
-    body {
-      font-family: 'Aptos Narrow', sans-serif;
-      font-size: 11px;
-      background-color: #f4f4f4;
-      padding: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 6px;
-      text-align: left;
-      font-weight: normal;
-    }
-    th {
-      background-color: #eee;
-    }
-    input, button {
-      font-family: 'Aptos Narrow', sans-serif;
-      font-size: 11px;
-      margin: 5px;
-    }
-  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-  <h2>Component Life EM</h2>
+<body class="bg-gray-100 text-gray-800">
 
-  <input type="text" id="filter-input" placeholder="Filter data..." />
-  <br/>
+  <!-- Header -->
+  <header class="bg-blue-700 text-white py-4 shadow-lg">
+    <h1 class="text-center text-2xl font-bold">📊 Component Life EM</h1>
+  </header>
 
-  <input type="text" id="equipment" placeholder="Equipment" />
-  <input type="text" id="model" placeholder="Model" />
-  <input type="text" id="component" placeholder="Component" />
-  <button id="add-btn">Tambah Data</button>
-  <br/>
+  <!-- Menu -->
+  <nav class="flex justify-center space-x-6 bg-blue-100 py-3 shadow">
+    <button onclick="showMenu('monitoring')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Monitoring Component</button>
+    <button onclick="showMenu('smu')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Current SMU (Update)</button>
+  </nav>
 
-  <input type="file" id="upload" />
-  <br/>
+  <!-- Monitoring Component -->
+  <section id="monitoring" class="p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-semibold">📋 Monitoring Component</h2>
+      <button onclick="openAddForm()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">+ Tambah Data</button>
+    </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Equipment</th>
-        <th>Model</th>
-        <th>Component</th>
-        <th>Freq</th>
-        <th>Cost</th>
-        <th>Change Out</th>
-        <th>Rating</th>
-        <th>Remarks</th>
-        <th>Picture</th>
-        <th>Current SMU</th>
-        <th>Next Change</th>
-        <th>Life</th>
-        <th>Life %</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="component-body"></tbody>
-  </table>
+    <div class="overflow-x-auto bg-white rounded-lg shadow-lg">
+      <table class="min-w-full border border-gray-300">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="border px-3 py-2">Equipment</th>
+            <th class="border px-3 py-2">Model</th>
+            <th class="border px-3 py-2">Component</th>
+            <th class="border px-3 py-2">Freq</th>
+            <th class="border px-3 py-2">Cost</th>
+            <th class="border px-3 py-2">Change Out</th>
+            <th class="border px-3 py-2">Current SMU</th>
+            <th class="border px-3 py-2">Next Change</th>
+            <th class="border px-3 py-2">Life</th>
+            <th class="border px-3 py-2">Life %</th>
+            <th class="border px-3 py-2">Picture</th>
+            <th class="border px-3 py-2">Action</th>
+          </tr>
+        </thead>
+        <tbody id="componentTable" class="text-center"></tbody>
+      </table>
+    </div>
+  </section>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-    import {
-      initializeFirestore,
-      collection,
-      getDocs,
-      addDoc,
-      deleteDoc,
-      doc
-    } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
-    import {
-      getStorage,
-      ref,
-      uploadBytes,
-      getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
+  <!-- Current SMU -->
+  <section id="smu" class="p-6 hidden">
+    <h2 class="text-xl font-semibold mb-4">⚙️ Update Current SMU</h2>
+    <form id="smuForm" class="bg-white p-4 rounded-lg shadow-lg space-y-4">
+      <div>
+        <label class="block font-semibold">Equipment ID</label>
+        <input id="smuEquipment" type="text" class="border p-2 w-full rounded-lg">
+      </div>
+      <div>
+        <label class="block font-semibold">Current SMU</label>
+        <input id="smuValue" type="number" class="border p-2 w-full rounded-lg">
+      </div>
+      <button type="button" onclick="updateSMU()" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">Update SMU</button>
+    </form>
+  </section>
 
+  <!-- Add/Edit Form -->
+  <div id="formModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+      <h3 class="text-lg font-semibold mb-4">Tambah / Edit Component</h3>
+      <form id="componentForm" class="space-y-3">
+        <input type="hidden" id="docId">
+        <input id="equipment" placeholder="Equipment" class="border p-2 w-full rounded-lg">
+        <input id="model" placeholder="Model" class="border p-2 w-full rounded-lg">
+        <input id="component" placeholder="Component" class="border p-2 w-full rounded-lg">
+        <input id="freq" placeholder="Freq" type="number" class="border p-2 w-full rounded-lg">
+        <input id="cost" placeholder="Cost" type="number" class="border p-2 w-full rounded-lg">
+        <input id="changeOut" placeholder="Change Out" type="number" class="border p-2 w-full rounded-lg">
+        <label class="block">Picture:</label>
+        <input id="picture" type="file" accept="image/*" class="w-full">
+        <button type="button" onclick="saveComponent()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Save</button>
+        <button type="button" onclick="closeForm()" class="w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script>
+    // === Firebase Config (ganti dengan projectmu) ===
     const firebaseConfig = {
-      apiKey: "AIzaSyAHQFyRifcuYJYGuiQaK9vvWJpYGfoDdmI",
-      authDomain: "component-life.firebaseapp.com",
-      projectId: "component-life",
-      storageBucket: "component-life.appspot.com",
-      messagingSenderId: "401190574281",
-      appId: "1:401190574281:web:16c2401b5bda146779d518",
-      measurementId: "G-77WF4LVS25"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = initializeFirestore(app, {
-      experimentalForceLongPolling: true,
-      useFetchStreams: false
-    });
-    const storage = getStorage(app);
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
 
-    console.log("Firebase berhasil terhubung ✅");
-
-    async function loadData() {
-      const body = document.getElementById("component-body");
-      if (!body) {
-        console.error("❌ Element #component-body tidak ditemukan.");
-        return;
-      }
-
-      body.innerHTML = "";
-
-      try {
-        const querySnapshot = await getDocs(collection(db, "componentLife"));
-        querySnapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${data.equipment || ""}</td>
-            <td>${data.model || ""}</td>
-            <td>${data.component || ""}</td>
-            <td>${data.freq || ""}</td>
-            <td>${data.cost || ""}</td>
-            <td>${data.changeOut || ""}</td>
-            <td>${data.rating || ""}</td>
-            <td>${data.remarks || ""}</td>
-            <td>${data.picture ? `<img src="${data.picture}" width="50"/>` : ""}</td>
-            <td>${data.currentSMU || ""}</td>
-            <td>${data.nextChange || ""}</td>
-            <td>${data.life || ""}</td>
-            <td>${data.lifePercent || ""}</td>
-            <td><button class="delete-btn" data-id="${docSnap.id}">❌</button></td>
-          `;
-          body.appendChild(row);
-        });
-      } catch (err) {
-        console.error("Gagal ambil data ❌", err);
-      }
+    // === Toggle Menu ===
+    function showMenu(menu) {
+      document.getElementById("monitoring").classList.add("hidden");
+      document.getElementById("smu").classList.add("hidden");
+      document.getElementById(menu).classList.remove("hidden");
     }
 
-    document.querySelector("#add-btn")?.addEventListener("click", async () => {
+    // === Modal ===
+    function openAddForm() {
+      document.getElementById("formModal").classList.remove("hidden");
+      document.getElementById("componentForm").reset();
+      document.getElementById("docId").value = "";
+    }
+    function closeForm() {
+      document.getElementById("formModal").classList.add("hidden");
+    }
+
+    // === Save Component ===
+    async function saveComponent() {
+      const docId = document.getElementById("docId").value;
       const equipment = document.getElementById("equipment").value;
       const model = document.getElementById("model").value;
       const component = document.getElementById("component").value;
+      const freq = parseInt(document.getElementById("freq").value) || 0;
+      const cost = parseInt(document.getElementById("cost").value) || 0;
+      const changeOut = parseInt(document.getElementById("changeOut").value) || 0;
+      const file = document.getElementById("picture").files[0];
 
-      if (!equipment || !model || !component) {
-        alert("Mohon isi semua field wajib ❌");
-        return;
+      let pictureUrl = "";
+      if (file) {
+        const storageRef = storage.ref("pictures/" + file.name);
+        await storageRef.put(file);
+        pictureUrl = await storageRef.getDownloadURL();
       }
 
-      try {
-        await addDoc(collection(db, "componentLife"), {
-          equipment,
-          model,
-          component,
-          freq: "",
-          cost: "",
-          changeOut: "",
-          rating: "",
-          remarks: "",
-          picture: "",
-          currentSMU: "",
-          nextChange: "",
-          life: "",
-          lifePercent: ""
-        });
-        alert("Data berhasil ditambahkan ✅");
-        loadData();
-      } catch (err) {
-        console.error("Gagal tambah data ❌", err);
+      const data = { equipment, model, component, freq, cost, changeOut, picture: pictureUrl };
+
+      if (docId) {
+        await db.collection("components").doc(docId).update(data);
+      } else {
+        await db.collection("components").add(data);
       }
-    });
 
-    document.addEventListener("click", async (e) => {
-      if (e.target.classList.contains("delete-btn")) {
-        const id = e.target.dataset.id;
-        if (confirm("Yakin ingin hapus data ini?")) {
-          await deleteDoc(doc(db, "componentLife", id));
-          loadData();
-        }
-      }
-    });
+      closeForm();
+      loadComponents();
+    }
 
-    document.querySelector("#upload")?.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+    // === Load Components ===
+    async function loadComponents() {
+      const snapshot = await db.collection("components").get();
+      const table = document.getElementById("componentTable");
+      table.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const currentSMU = data.currentSMU || 0;
+        const nextChange = currentSMU + (data.freq || 0);
+        const life = currentSMU - (data.changeOut || 0);
+        const lifePct = data.freq ? ((life / data.freq) * 100).toFixed(1) : 0;
 
-      try {
-        const storageRef = ref(storage, "images/" + file.name);
-        await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
-        alert("Upload berhasil ✅ URL: " + url);
-      } catch (err) {
-        console.error("Upload gagal ❌", err);
-      }
-    });
-
-    document.querySelector("#filter-input")?.addEventListener("input", async (e) => {
-      const keyword = e.target.value.toLowerCase();
-      const rows = document.querySelectorAll("#component-body tr");
-      rows.forEach((row) => {
-        const text = row.innerText.toLowerCase();
-        row.style.display = text.includes(keyword) ? "" : "none";
+        table.innerHTML += `
+          <tr>
+            <td class="border px-3 py-2">${data.equipment}</td>
+            <td class="border px-3 py-2">${data.model}</td>
+            <td class="border px-3 py-2">${data.component}</td>
+            <td class="border px-3 py-2">${data.freq}</td>
+            <td class="border px-3 py-2">${data.cost}</td>
+            <td class="border px-3 py-2">${data.changeOut}</td>
+            <td class="border px-3 py-2">${currentSMU}</td>
+            <td class="border px-3 py-2">${nextChange}</td>
+            <td class="border px-3 py-2">${life}</td>
+            <td class="border px-3 py-2">${lifePct}%</td>
+            <td class="border px-3 py-2">
+              ${data.picture ? `<img src="${data.picture}" class="h-12 mx-auto">` : "-"}
+            </td>
+            <td class="border px-3 py-2 space-x-2">
+              <button onclick="editComponent('${doc.id}')" class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
+              <button onclick="deleteComponent('${doc.id}')" class="bg-red-600 text-white px-2 py-1 rounded">Delete</button>
+            </td>
+          </tr>
+        `;
       });
-    });
+    }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      loadData();
-    });
+    // === Edit Component ===
+    async function editComponent(id) {
+      const docSnap = await db.collection("components").doc(id).get();
+      const data = docSnap.data();
+      document.getElementById("docId").value = id;
+      document.getElementById("equipment").value = data.equipment;
+      document.getElementById("model").value = data.model;
+      document.getElementById("component").value = data.component;
+      document.getElementById("freq").value = data.freq;
+      document.getElementById("cost").value = data.cost;
+      document.getElementById("changeOut").value = data.changeOut;
+      document.getElementById("formModal").classList.remove("hidden");
+    }
+
+    // === Delete Component ===
+    async function deleteComponent(id) {
+      if (confirm("Yakin hapus data ini?")) {
+        await db.collection("components").doc(id).delete();
+        loadComponents();
+      }
+    }
+
+    // === Update SMU ===
+    async function updateSMU() {
+      const equipment = document.getElementById("smuEquipment").value;
+      const smuValue = parseInt(document.getElementById("smuValue").value) || 0;
+
+      const snapshot = await db.collection("components").where("equipment", "==", equipment).get();
+      snapshot.forEach(async doc => {
+        await db.collection("components").doc(doc.id).update({ currentSMU: smuValue });
+      });
+
+      alert("SMU berhasil diupdate ✅");
+      loadComponents();
+    }
+
+    // === Init Load ===
+    loadComponents();
   </script>
 </body>
 </html>
