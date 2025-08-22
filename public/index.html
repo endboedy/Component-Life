@@ -4,15 +4,17 @@
 <meta charset="UTF-8">
 <title>Component Life EM</title>
 <style>
-  body { font-family: Arial, sans-serif; margin: 20px; }
-  h1 { text-align: center; }
-  .menu { margin-bottom: 20px; }
-  .menu button { margin-right: 10px; padding: 10px 15px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-  th.right, td.right { text-align: right; }
-  button { cursor: pointer; }
-  input[type="text"], input[type="number"] { width: 100%; box-sizing: border-box; }
+body { font-family: Arial, sans-serif; margin: 20px; }
+h1 { text-align: center; }
+.menu { margin-bottom: 20px; }
+.menu button { margin-right: 10px; padding: 10px 15px; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+th.right, td.right { text-align: right; }
+button { cursor: pointer; }
+input[type="text"], input[type="number"], textarea { width: 100%; box-sizing: border-box; }
+#smu-area { display:none; margin-top:10px; }
+#smu-area textarea { height:100px; }
 </style>
 </head>
 <body>
@@ -24,7 +26,7 @@
   <button id="menu-smu">Current SMU (Update SMU Multi)</button>
 </div>
 
-<div id="form-add" style="display:none; margin-bottom:20px;">
+<div id="form-add" style="margin-bottom:20px;">
   <input type="text" id="equipment" placeholder="Equipment">
   <input type="text" id="model" placeholder="Model">
   <input type="text" id="component" placeholder="Component">
@@ -33,6 +35,11 @@
   <input type="number" id="changeOut" placeholder="Change Out">
   <input type="file" id="upload">
   <button id="add-btn">Tambah</button>
+</div>
+
+<div id="smu-area">
+  <textarea id="smu-multi" placeholder="Format: Equipment SMU, contoh:&#10;CO4402 1234&#10;CO4356 2341"></textarea>
+  <button id="save-smu">Simpan SMU</button>
 </div>
 
 <input type="text" id="filter-input" placeholder="Filter...">
@@ -82,20 +89,19 @@ const storage = getStorage(app);
 
 console.log("Firebase berhasil terhubung ✅");
 
-function formatNumber(n) {
-  if (!n && n!==0) return "";
-  return n.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+function formatNumber(n){
+  if(!n && n!==0) return "";
+  return n.toLocaleString('id-ID',{maximumFractionDigits:0});
 }
 
 // Load Data
-async function loadData() {
+async function loadData(){
   const body = document.getElementById("component-body");
-  if (!body) return;
+  if(!body) return;
   body.innerHTML = "";
-
-  try {
-    const querySnapshot = await getDocs(collection(db, "componentLife"));
-    querySnapshot.forEach((docSnap) => {
+  try{
+    const querySnapshot = await getDocs(collection(db,"componentLife"));
+    querySnapshot.forEach(docSnap=>{
       const data = docSnap.data();
       const freq = parseInt(data.freq)||0;
       const cost = parseInt(data.cost)||0;
@@ -105,8 +111,20 @@ async function loadData() {
       const life = currentSMU - changeOut;
       const lifePercent = freq ? Math.round((life/freq)*100) : 0;
 
+      let lifeStyle="";
+      if(life>freq){ lifeStyle="background:red;color:white"; }
+      else if(life>=0.85*freq){ lifeStyle="background:orange;color:white"; }
+      else if(life>=0.6*freq){ lifeStyle="background:blue;color:white"; }
+      else if(life>=0.5*freq){ lifeStyle="background:yellow;color:black"; }
+
+      let lifePercentStyle="";
+      if(lifePercent>100){ lifePercentStyle="background:red;color:white"; }
+      else if(lifePercent>=86){ lifePercentStyle="background:blue;color:white"; }
+      else if(lifePercent>=76){ lifePercentStyle="background:green;color:white"; }
+      else if(lifePercent>=50){ lifePercentStyle="background:yellow;color:black"; }
+
       const row = document.createElement("tr");
-      row.innerHTML = `
+      row.innerHTML=`
         <td>${data.equipment||""}</td>
         <td>${data.model||""}</td>
         <td>${data.component||""}</td>
@@ -115,92 +133,113 @@ async function loadData() {
         <td class="right">${formatNumber(changeOut)}</td>
         <td contenteditable="true">${data.rating||""}</td>
         <td contenteditable="true">${data.remarks||""}</td>
-        <td>${data.picture ? `<img src="${data.picture}" width="50"/>` : ""}</td>
+        <td>${data.picture?`<img src="${data.picture}" width="50"/>`:''}</td>
         <td class="right">${formatNumber(currentSMU)}</td>
         <td class="right">${formatNumber(nextChange)}</td>
-        <td class="right" style="${life>100?'background:red;color:white;':life>=86?'background:blue;color:white;':life>=76?'background:green;color:white;':life>=50?'background:yellow;color:black;':''}">${formatNumber(life)}</td>
-        <td class="right" style="${lifePercent>100?'background:red;color:white;':lifePercent>=86?'background:blue;color:white;':lifePercent>=76?'background:green;color:white;':lifePercent>=50?'background:yellow;color:black;':''}">${lifePercent}%</td>
+        <td class="right" style="${lifeStyle}">${formatNumber(life)}</td>
+        <td class="right" style="${lifePercentStyle}">${lifePercent}%</td>
         <td>
-          <button class="edit-btn" data-id="${docSnap.id}">Edit</button>
           <button class="save-btn" data-id="${docSnap.id}">Save</button>
           <button class="delete-btn" data-id="${docSnap.id}">❌</button>
         </td>
       `;
       body.appendChild(row);
     });
-  } catch (err) {
-    console.error("Gagal ambil data ❌", err);
-    alert("Koneksi Firestore gagal. Cek jaringan atau konfigurasi.");
+  }catch(err){
+    console.error("Gagal ambil data ❌",err);
   }
 }
 
 // Tambah Data
-document.querySelector("#add-btn")?.addEventListener("click", async () => {
-  const equipment = document.getElementById("equipment").value;
-  const model = document.getElementById("model").value;
-  const component = document.getElementById("component").value;
-  const freq = document.getElementById("freq").value;
-  const cost = document.getElementById("cost").value;
-  const changeOut = document.getElementById("changeOut").value;
+document.querySelector("#add-btn")?.addEventListener("click",async ()=>{
+  const equipment=document.getElementById("equipment").value;
+  const model=document.getElementById("model").value;
+  const component=document.getElementById("component").value;
+  const freq=document.getElementById("freq").value;
+  const cost=document.getElementById("cost").value;
+  const changeOut=document.getElementById("changeOut").value;
 
-  if (!equipment || !model || !component) {
+  if(!equipment||!model||!component){
     alert("Mohon isi field Equipment, Model, Component ❌");
     return;
   }
 
-  try {
-    await addDoc(collection(db, "componentLife"), {
+  try{
+    await addDoc(collection(db,"componentLife"),{
       equipment, model, component, freq, cost, changeOut,
       rating:"", remarks:"", picture:"", currentSMU:""
     });
     alert("Data berhasil ditambahkan ✅");
     await loadData();
-  } catch(err){
-    console.error("Gagal tambah data ❌", err);
-  }
+  }catch(err){ console.error("Gagal tambah data ❌",err); }
 });
 
 // Delete
-document.addEventListener("click", async (e)=>{
+document.addEventListener("click",async (e)=>{
   if(e.target.classList.contains("delete-btn")){
-    const id = e.target.dataset.id;
+    const id=e.target.dataset.id;
     if(confirm("Yakin ingin hapus data ini?")){
-      try{
-        await deleteDoc(doc(db,"componentLife",id));
-        await loadData();
-      }catch(err){
-        console.error("Gagal hapus data ❌", err);
-      }
+      try{ await deleteDoc(doc(db,"componentLife",id)); await loadData(); }
+      catch(err){ console.error("Gagal hapus data ❌",err); }
     }
   }
 });
 
 // Save Rating & Remarks
-document.addEventListener("click", async (e)=>{
+document.addEventListener("click",async (e)=>{
   if(e.target.classList.contains("save-btn")){
-    const id = e.target.dataset.id;
-    const row = e.target.closest("tr");
-    const rating = row.cells[6].innerText;
-    const remarks = row.cells[7].innerText;
+    const id=e.target.dataset.id;
+    const row=e.target.closest("tr");
+    const rating=row.cells[6].innerText;
+    const remarks=row.cells[7].innerText;
     try{
-      await updateDoc(doc(db,"componentLife",id), {rating,remarks});
+      await updateDoc(doc(db,"componentLife",id),{rating,remarks});
       alert("Data berhasil disimpan ✅");
       await loadData();
-    }catch(err){
-      console.error("Gagal update ❌", err);
-    }
+    }catch(err){ console.error("Gagal update ❌",err); }
   }
 });
 
 // Filter
-document.querySelector("#filter-input")?.addEventListener("input", (e)=>{
-  const keyword = e.target.value.toLowerCase();
+document.querySelector("#filter-input")?.addEventListener("input",(e)=>{
+  const keyword=e.target.value.toLowerCase();
   document.querySelectorAll("#component-body tr").forEach(row=>{
-    row.style.display = row.innerText.toLowerCase().includes(keyword) ? "" : "none";
+    row.style.display=row.innerText.toLowerCase().includes(keyword)?'':'none';
   });
 });
 
-document.addEventListener("DOMContentLoaded", ()=>{ loadData(); });
+// Menu Current SMU
+document.querySelector("#menu-smu")?.addEventListener("click",()=>{
+  document.getElementById("smu-area").style.display="block";
+  document.getElementById("form-add").style.display="none";
+});
+
+document.querySelector("#menu-monitor")?.addEventListener("click",()=>{
+  document.getElementById("smu-area").style.display="none";
+  document.getElementById("form-add").style.display="block";
+});
+
+// Save SMU Multi
+document.querySelector("#save-smu")?.addEventListener("click", async ()=>{
+  const text=document.getElementById("smu-multi").value;
+  const lines=text.split("\n");
+  for(const line of lines){
+    const [equip, smu] = line.trim().split(/\s+/);
+    if(equip && smu){
+      const querySnapshot=await getDocs(collection(db,"componentLife"));
+      querySnapshot.forEach(async(docSnap)=>{
+        if(docSnap.data().equipment===equip){
+          await updateDoc(doc(db,"componentLife",docSnap.id),{currentSMU:parseInt(smu)});
+        }
+      });
+    }
+  }
+  alert("SMU berhasil diperbarui ✅");
+  document.getElementById("smu-multi").value="";
+  await loadData();
+});
+
+document.addEventListener("DOMContentLoaded",()=>{loadData();});
 </script>
 
 </body>
