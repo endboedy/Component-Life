@@ -2,19 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Component Life EM</title>
 <style>
-body { font-family: Arial, sans-serif; margin: 20px; }
-h1 { text-align: center; }
-.menu { margin-bottom: 20px; }
-.menu button { margin-right: 10px; padding: 10px 15px; }
-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-th.right, td.right { text-align: right; }
-button { cursor: pointer; }
-input[type="text"], input[type="number"], textarea { width: 100%; box-sizing: border-box; }
-#smu-area { display:none; margin-top:10px; }
-#smu-area textarea { height:100px; }
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+  h1 { text-align: center; color: #333; }
+  .menu { margin-bottom: 20px; text-align: center; }
+  .menu button { margin: 0 5px; padding: 8px 16px; cursor: pointer; }
+  .hidden { display: none; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; }
+  th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+  th { background-color: #4CAF50; color: white; cursor: pointer; }
+  td.numeric { text-align: right; }
+  tr:hover { background-color: #f1f1f1; }
+  .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background: rgba(0,0,0,0.5); }
+  .modal-content { background: #fff; margin: 10% auto; padding: 20px; border-radius: 5px; width: 400px; }
+  .modal-content label { display: block; margin-top: 10px; }
+  .modal-content input, .modal-content textarea { width: 100%; padding: 6px; margin-top: 4px; }
+  .modal-content button { margin-top: 10px; padding: 6px 12px; cursor: pointer; }
+  #progressContainer { margin-top: 10px; background: #ddd; border-radius: 5px; }
+  #progressBar { width: 0%; height: 20px; background: #4CAF50; border-radius: 5px; }
 </style>
 </head>
 <body>
@@ -22,53 +29,73 @@ input[type="text"], input[type="number"], textarea { width: 100%; box-sizing: bo
 <h1>Component Life EM</h1>
 
 <div class="menu">
-  <button id="menu-monitor">Monitoring Component</button>
-  <button id="menu-smu">Current SMU (Update SMU Multi)</button>
+  <button id="menu1Btn">Monitoring Component</button>
+  <button id="menu2Btn">Current SMU (Update Multi)</button>
 </div>
 
-<div id="form-add" style="margin-bottom:20px;">
-  <input type="text" id="equipment" placeholder="Equipment">
-  <input type="text" id="model" placeholder="Model">
-  <input type="text" id="component" placeholder="Component">
-  <input type="number" id="freq" placeholder="Freq">
-  <input type="number" id="cost" placeholder="Cost">
-  <input type="number" id="changeOut" placeholder="Change Out">
-  <input type="file" id="upload">
-  <button id="add-btn">Tambah</button>
+<!-- Filter Section -->
+<div id="filterSection">
+  <input type="text" id="filterEquipment" placeholder="Filter Equipment">
+  <input type="text" id="filterComponent" placeholder="Filter Component">
+  <button id="filterBtn">Filter</button>
+  <button id="clearFilterBtn">Clear</button>
 </div>
 
-<div id="smu-area">
-  <textarea id="smu-multi" placeholder="Format: Equipment SMU, contoh:&#10;CO4402 1234&#10;CO4356 2341"></textarea>
-  <button id="save-smu">Simpan SMU</button>
+<!-- Menu 1: Monitoring Component -->
+<div id="menu1" class="menuContent">
+  <button id="addBtn">Tambah Data</button>
+  <table id="componentTable">
+    <thead>
+      <tr>
+        <th data-key="equipment">Equipment</th>
+        <th data-key="model">Model</th>
+        <th data-key="component">Component</th>
+        <th data-key="freq">Freq</th>
+        <th data-key="cost">Cost</th>
+        <th data-key="changeOut">Change Out</th>
+        <th data-key="rating">Rating</th>
+        <th data-key="remarks">Remarks</th>
+        <th>Picture</th>
+        <th data-key="currentSMU">Current SMU</th>
+        <th data-key="nextChange">Next Change</th>
+        <th data-key="life">Life</th>
+        <th data-key="lifePercent">Life %</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="componentBody"></tbody>
+  </table>
 </div>
 
-<input type="text" id="filter-input" placeholder="Filter...">
+<!-- Menu 2: Update SMU Multi -->
+<div id="menu2" class="menuContent hidden">
+  <h3>Update Current SMU Multi</h3>
+  <textarea id="smuTextarea" rows="10" placeholder="CO4402 1234&#10;CO4356 2341"></textarea><br>
+  <button id="updateSMUBtn">Update SMU</button>
+  <div id="progressContainer"><div id="progressBar"></div></div>
+</div>
 
-<table>
-  <thead>
-    <tr>
-      <th>Equipment</th>
-      <th>Model</th>
-      <th>Component</th>
-      <th class="right">Freq</th>
-      <th class="right">Cost</th>
-      <th class="right">Change Out</th>
-      <th>Rating</th>
-      <th>Remarks</th>
-      <th>Picture</th>
-      <th class="right">Current SMU</th>
-      <th class="right">Next Change</th>
-      <th class="right">Life</th>
-      <th class="right">Life %</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody id="component-body"></tbody>
-</table>
+<!-- Modal Popup for Add/Edit -->
+<div id="dataModal" class="modal">
+  <div class="modal-content">
+    <h3 id="modalTitle">Tambah Data</h3>
+    <label>Equipment <input type="text" id="modalEquipment"></label>
+    <label>Model <input type="text" id="modalModel"></label>
+    <label>Component <input type="text" id="modalComponent"></label>
+    <label>Freq <input type="number" id="modalFreq"></label>
+    <label>Cost <input type="number" id="modalCost"></label>
+    <label>Change Out <input type="number" id="modalChangeOut"></label>
+    <label>Rating <input type="text" id="modalRating"></label>
+    <label>Remarks <input type="text" id="modalRemarks"></label>
+    <label>Picture <input type="file" id="modalPicture"></label>
+    <button id="saveModalBtn">Save</button>
+    <button id="closeModalBtn">Close</button>
+  </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
 
 // Firebase Config
@@ -82,164 +109,232 @@ const firebaseConfig = {
   measurementId: "G-77WF4LVS25"
 };
 
-// Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-console.log("Firebase berhasil terhubung ✅");
+let currentEditId = null;
 
-function formatNumber(n){
-  if(!n && n!==0) return "";
-  return n.toLocaleString('id-ID',{maximumFractionDigits:0});
+// Menu Toggle
+const menu1Btn = document.getElementById('menu1Btn');
+const menu2Btn = document.getElementById('menu2Btn');
+const menu1Div = document.getElementById('menu1');
+const menu2Div = document.getElementById('menu2');
+
+menu1Btn.onclick = () => { menu1Div.classList.remove('hidden'); menu2Div.classList.add('hidden'); }
+menu2Btn.onclick = () => { menu2Div.classList.remove('hidden'); menu1Div.classList.add('hidden'); }
+
+// Modal
+const modal = document.getElementById('dataModal');
+const modalTitle = document.getElementById('modalTitle');
+const modalEquipment = document.getElementById('modalEquipment');
+const modalModel = document.getElementById('modalModel');
+const modalComponent = document.getElementById('modalComponent');
+const modalFreq = document.getElementById('modalFreq');
+const modalCost = document.getElementById('modalCost');
+const modalChangeOut = document.getElementById('modalChangeOut');
+const modalRating = document.getElementById('modalRating');
+const modalRemarks = document.getElementById('modalRemarks');
+const modalPicture = document.getElementById('modalPicture');
+const saveModalBtn = document.getElementById('saveModalBtn');
+const closeModalBtn = document.getElementById('closeModalBtn');
+
+document.getElementById('addBtn').onclick = () => {
+  currentEditId = null;
+  modalTitle.innerText = 'Tambah Data';
+  modalEquipment.value = '';
+  modalModel.value = '';
+  modalComponent.value = '';
+  modalFreq.value = '';
+  modalCost.value = '';
+  modalChangeOut.value = '';
+  modalRating.value = '';
+  modalRemarks.value = '';
+  modalPicture.value = '';
+  modal.style.display = 'block';
 }
+
+closeModalBtn.onclick = () => modal.style.display = 'none';
 
 // Load Data
-async function loadData(){
-  const body = document.getElementById("component-body");
-  if(!body) return;
-  body.innerHTML = "";
-  try{
-    const querySnapshot = await getDocs(collection(db,"componentLife"));
-    querySnapshot.forEach(docSnap=>{
-      const data = docSnap.data();
-      const freq = parseInt(data.freq)||0;
-      const cost = parseInt(data.cost)||0;
-      const changeOut = parseInt(data.changeOut)||0;
-      const currentSMU = parseInt(data.currentSMU)||0;
-      const nextChange = currentSMU + freq;
-      const life = currentSMU - changeOut;
-      const lifePercent = freq ? Math.round((life/freq)*100) : 0;
+async function loadData() {
+  const tbody = document.getElementById('componentBody');
+  tbody.innerHTML = '';
+  const querySnapshot = await getDocs(collection(db, 'componentLife'));
+  querySnapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const tr = document.createElement('tr');
 
-      let lifeStyle="";
-      if(life>freq){ lifeStyle="background:red;color:white"; }
-      else if(life>=0.85*freq){ lifeStyle="background:orange;color:white"; }
-      else if(life>=0.6*freq){ lifeStyle="background:blue;color:white"; }
-      else if(life>=0.5*freq){ lifeStyle="background:yellow;color:black"; }
+    const life = data.currentSMU && data.changeOut ? data.currentSMU - data.changeOut : 0;
+    const lifePercent = data.freq ? (life / data.freq * 100) : 0;
 
-      let lifePercentStyle="";
-      if(lifePercent>100){ lifePercentStyle="background:red;color:white"; }
-      else if(lifePercent>=86){ lifePercentStyle="background:blue;color:white"; }
-      else if(lifePercent>=76){ lifePercentStyle="background:green;color:white"; }
-      else if(lifePercent>=50){ lifePercentStyle="background:yellow;color:black"; }
-
-      const row = document.createElement("tr");
-      row.innerHTML=`
-        <td>${data.equipment||""}</td>
-        <td>${data.model||""}</td>
-        <td>${data.component||""}</td>
-        <td class="right">${formatNumber(freq)}</td>
-        <td class="right">${formatNumber(cost)}</td>
-        <td class="right">${formatNumber(changeOut)}</td>
-        <td contenteditable="true">${data.rating||""}</td>
-        <td contenteditable="true">${data.remarks||""}</td>
-        <td>${data.picture?`<img src="${data.picture}" width="50"/>`:''}</td>
-        <td class="right">${formatNumber(currentSMU)}</td>
-        <td class="right">${formatNumber(nextChange)}</td>
-        <td class="right" style="${lifeStyle}">${formatNumber(life)}</td>
-        <td class="right" style="${lifePercentStyle}">${lifePercent}%</td>
-        <td>
-          <button class="save-btn" data-id="${docSnap.id}">Save</button>
-          <button class="delete-btn" data-id="${docSnap.id}">❌</button>
-        </td>
-      `;
-      body.appendChild(row);
-    });
-  }catch(err){
-    console.error("Gagal ambil data ❌",err);
-  }
+    tr.innerHTML = `
+      <td>${data.equipment || ''}</td>
+      <td>${data.model || ''}</td>
+      <td>${data.component || ''}</td>
+      <td class="numeric">${data.freq?.toLocaleString() || ''}</td>
+      <td class="numeric">${data.cost?.toLocaleString() || ''}</td>
+      <td class="numeric">${data.changeOut?.toLocaleString() || ''}</td>
+      <td>${data.rating || ''}</td>
+      <td>${data.remarks || ''}</td>
+      <td>${data.picture ? `<img src="${data.picture}" width="50"/>` : ''}</td>
+      <td class="numeric">${data.currentSMU?.toLocaleString() || ''}</td>
+      <td class="numeric">${data.nextChange?.toLocaleString() || ''}</td>
+      <td class="numeric" style="${getLifeStyle(life, data.freq)}">${life.toLocaleString()}</td>
+      <td class="numeric" style="${getLifePercentStyle(lifePercent)}">${lifePercent.toFixed(0)}%</td>
+      <td>
+        <button class="editBtn" data-id="${docSnap.id}">✏️</button>
+        <button class="deleteBtn" data-id="${docSnap.id}">❌</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
-// Tambah Data
-document.querySelector("#add-btn")?.addEventListener("click",async ()=>{
-  const equipment=document.getElementById("equipment").value;
-  const model=document.getElementById("model").value;
-  const component=document.getElementById("component").value;
-  const freq=document.getElementById("freq").value;
-  const cost=document.getElementById("cost").value;
-  const changeOut=document.getElementById("changeOut").value;
+// Life Styling
+function getLifeStyle(life, freq) {
+  if (!freq) return '';
+  const perc = life / freq;
+  if (perc > 1) return 'background:red;color:white';
+  if (perc >= 0.85) return 'background:orange;color:white';
+  if (perc >= 0.6) return 'background:blue;color:white';
+  if (perc >= 0.5) return 'background:yellow;color:black';
+  return '';
+}
 
-  if(!equipment||!model||!component){
-    alert("Mohon isi field Equipment, Model, Component ❌");
-    return;
+// Life % Styling
+function getLifePercentStyle(lifePercent) {
+  if (lifePercent > 100) return 'background:red;color:white';
+  if (lifePercent >= 86) return 'background:blue;color:white';
+  if (lifePercent >= 76) return 'background:green;color:white';
+  if (lifePercent >= 50) return 'background:yellow;color:black';
+  return '';
+}
+
+// Save Modal
+saveModalBtn.onclick = async () => {
+  const obj = {
+    equipment: modalEquipment.value,
+    model: modalModel.value,
+    component: modalComponent.value,
+    freq: Number(modalFreq.value) || 0,
+    cost: Number(modalCost.value) || 0,
+    changeOut: Number(modalChangeOut.value) || 0,
+    rating: modalRating.value,
+    remarks: modalRemarks.value,
+    currentSMU: 0,
+    nextChange: 0,
+    life: 0,
+    lifePercent: 0,
+    picture: ''
+  };
+
+  // Upload picture jika ada
+  if (modalPicture.files.length > 0) {
+    const file = modalPicture.files[0];
+    const storageRef = ref(storage, 'images/' + file.name);
+    await uploadBytes(storageRef, file);
+    obj.picture = await getDownloadURL(storageRef);
   }
 
-  try{
-    await addDoc(collection(db,"componentLife"),{
-      equipment, model, component, freq, cost, changeOut,
-      rating:"", remarks:"", picture:"", currentSMU:""
-    });
-    alert("Data berhasil ditambahkan ✅");
-    await loadData();
-  }catch(err){ console.error("Gagal tambah data ❌",err); }
-});
+  if (currentEditId) {
+    await updateDoc(doc(db, 'componentLife', currentEditId), obj);
+  } else {
+    await addDoc(collection(db, 'componentLife'), obj);
+  }
 
-// Delete
-document.addEventListener("click",async (e)=>{
-  if(e.target.classList.contains("delete-btn")){
-    const id=e.target.dataset.id;
-    if(confirm("Yakin ingin hapus data ini?")){
-      try{ await deleteDoc(doc(db,"componentLife",id)); await loadData(); }
-      catch(err){ console.error("Gagal hapus data ❌",err); }
+  modal.style.display = 'none';
+  await loadData();
+}
+
+// Edit & Delete
+document.getElementById('componentBody').addEventListener('click', async e => {
+  if (e.target.classList.contains('deleteBtn')) {
+    const id = e.target.dataset.id;
+    if (confirm('Yakin ingin hapus data?')) {
+      await deleteDoc(doc(db, 'componentLife', id));
+      await loadData();
     }
   }
-});
-
-// Save Rating & Remarks
-document.addEventListener("click",async (e)=>{
-  if(e.target.classList.contains("save-btn")){
-    const id=e.target.dataset.id;
-    const row=e.target.closest("tr");
-    const rating=row.cells[6].innerText;
-    const remarks=row.cells[7].innerText;
-    try{
-      await updateDoc(doc(db,"componentLife",id),{rating,remarks});
-      alert("Data berhasil disimpan ✅");
-      await loadData();
-    }catch(err){ console.error("Gagal update ❌",err); }
+  if (e.target.classList.contains('editBtn')) {
+    const id = e.target.dataset.id;
+    currentEditId = id;
+    const docSnap = await getDocs(collection(db, 'componentLife'));
+    docSnap.forEach(d => {
+      if (d.id === id) {
+        const data = d.data();
+        modalEquipment.value = data.equipment;
+        modalModel.value = data.model;
+        modalComponent.value = data.component;
+        modalFreq.value = data.freq;
+        modalCost.value = data.cost;
+        modalChangeOut.value = data.changeOut;
+        modalRating.value = data.rating;
+        modalRemarks.value = data.remarks;
+        modalTitle.innerText = 'Edit Data';
+        modal.style.display = 'block';
+      }
+    });
   }
 });
 
 // Filter
-document.querySelector("#filter-input")?.addEventListener("input",(e)=>{
-  const keyword=e.target.value.toLowerCase();
-  document.querySelectorAll("#component-body tr").forEach(row=>{
-    row.style.display=row.innerText.toLowerCase().includes(keyword)?'':'none';
+document.getElementById('filterBtn').onclick = () => {
+  const eq = document.getElementById('filterEquipment').value.toLowerCase();
+  const comp = document.getElementById('filterComponent').value.toLowerCase();
+  const rows = document.querySelectorAll('#componentBody tr');
+  rows.forEach(r => {
+    const tEq = r.cells[0].innerText.toLowerCase();
+    const tComp = r.cells[2].innerText.toLowerCase();
+    r.style.display = (tEq.includes(eq) && tComp.includes(comp)) ? '' : 'none';
   });
-});
+}
 
-// Menu Current SMU
-document.querySelector("#menu-smu")?.addEventListener("click",()=>{
-  document.getElementById("smu-area").style.display="block";
-  document.getElementById("form-add").style.display="none";
-});
+document.getElementById('clearFilterBtn').onclick = () => {
+  document.getElementById('filterEquipment').value = '';
+  document.getElementById('filterComponent').value = '';
+  document.querySelectorAll('#componentBody tr').forEach(r => r.style.display = '');
+}
 
-document.querySelector("#menu-monitor")?.addEventListener("click",()=>{
-  document.getElementById("smu-area").style.display="none";
-  document.getElementById("form-add").style.display="block";
-});
-
-// Save SMU Multi
-document.querySelector("#save-smu")?.addEventListener("click", async ()=>{
-  const text=document.getElementById("smu-multi").value;
-  const lines=text.split("\n");
-  for(const line of lines){
-    const [equip, smu] = line.trim().split(/\s+/);
-    if(equip && smu){
-      const querySnapshot=await getDocs(collection(db,"componentLife"));
-      querySnapshot.forEach(async(docSnap)=>{
-        if(docSnap.data().equipment===equip){
-          await updateDoc(doc(db,"componentLife",docSnap.id),{currentSMU:parseInt(smu)});
-        }
-      });
+// Update SMU Multi
+document.getElementById('updateSMUBtn').onclick = async () => {
+  const lines = document.getElementById('smuTextarea').value.split('\n').filter(l => l.trim() !== '');
+  const bar = document.getElementById('progressBar');
+  const total = lines.length;
+  let count = 0;
+  for (let line of lines) {
+    const [eq, smu] = line.split(' ');
+    const querySnapshot = await getDocs(collection(db, 'componentLife'));
+    for (let d of querySnapshot.docs) {
+      if (d.data().equipment === eq) {
+        await updateDoc(doc(db, 'componentLife', d.id), { currentSMU: Number(smu) });
+      }
     }
+    count++;
+    bar.style.width = ((count/total)*100) + '%';
   }
-  alert("SMU berhasil diperbarui ✅");
-  document.getElementById("smu-multi").value="";
+  alert('Update SMU selesai ✅');
+  bar.style.width = '0%';
   await loadData();
+}
+
+// Sort
+document.querySelectorAll('#componentTable th[data-key]').forEach(th => {
+  th.onclick = () => {
+    const key = th.dataset.key;
+    const tbody = document.getElementById('componentBody');
+    const rows = Array.from(tbody.rows);
+    rows.sort((a,b) => {
+      const valA = a.cells[th.cellIndex].innerText.toLowerCase();
+      const valB = b.cells[th.cellIndex].innerText.toLowerCase();
+      return valA.localeCompare(valB, undefined, {numeric:true});
+    });
+    tbody.innerHTML = '';
+    rows.forEach(r => tbody.appendChild(r));
+  }
 });
 
-document.addEventListener("DOMContentLoaded",()=>{loadData();});
+loadData();
 </script>
 
 </body>
