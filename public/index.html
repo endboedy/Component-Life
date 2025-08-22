@@ -4,251 +4,106 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Component Life EM</title>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  addDoc,
-  deleteDoc,
-  doc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
-
-// Firebase Config
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-console.log("Firebase berhasil terhubung ✅");
-
-let currentMenu = "menu1";
-
-// --- Helper Functions ---
-function formatNumber(num){
-  if(!num && num!==0) return "";
-  return num.toLocaleString('en-US',{maximumFractionDigits:0});
-}
-
-function calcLife(currentSMU, changeOut, freq){
-  if(currentSMU===""||changeOut===""||freq==="") return {life:"", lifePercent:""};
-  const life = currentSMU - changeOut;
-  const lifePercent = (life/freq)*100;
-  return {life, lifePercent};
-}
-
-function colorLife(cell, value, freq){
-  if(value==="") return;
-  if(value>freq) {cell.style.backgroundColor="red"; cell.style.color="white";}
-  else if(value>=85 && value<=100) {cell.style.backgroundColor="orange"; cell.style.color="white";}
-  else if(value>=60 && value<85) {cell.style.backgroundColor="green"; cell.style.color="white";}
-  else if(value>=50 && value<60) {cell.style.backgroundColor="yellow"; cell.style.color="black";}
-}
-
-function colorLifePercent(cell,value){
-  if(value==="") return;
-  if(value>=0 && value<=75){cell.style.backgroundColor="yellow"; cell.style.color="black";}
-  else if(value>=76 && value<=85){cell.style.backgroundColor="green"; cell.style.color="white";}
-  else if(value>=86 && value<=100){cell.style.backgroundColor="blue"; cell.style.color="white";}
-  else if(value>100){cell.style.backgroundColor="red"; cell.style.color="white";}
-}
-
-// --- Load Data ---
-async function loadData(){
-  const body = document.getElementById("component-body");
-  body.innerHTML="";
-  try{
-    const querySnapshot = await getDocs(collection(db,"componentLife"));
-    querySnapshot.forEach(docSnap=>{
-      const data = docSnap.data();
-      const row = document.createElement("tr");
-      
-      const {life, lifePercent} = calcLife(data.currentSMU, data.changeOut, data.freq);
-
-      row.innerHTML=`
-        <td>${data.equipment||""}</td>
-        <td>${data.model||""}</td>
-        <td>${data.component||""}</td>
-        <td style="text-align:right">${formatNumber(data.freq)}</td>
-        <td style="text-align:right">${formatNumber(data.cost)}</td>
-        <td style="text-align:right">${formatNumber(data.changeOut)}</td>
-        <td contenteditable="true">${data.rating||""}</td>
-        <td contenteditable="true">${data.remarks||""}</td>
-        <td>${data.picture?`<img src="${data.picture}" width="50"/>`:""}</td>
-        <td style="text-align:right">${formatNumber(data.currentSMU)}</td>
-        <td style="text-align:right">${formatNumber(data.nextChange)}</td>
-        <td style="text-align:right">${formatNumber(life)}</td>
-        <td style="text-align:right">${lifePercent!==""?lifePercent.toFixed(0):""}</td>
-        <td><button class="delete-btn" data-id="${docSnap.id}">❌</button></td>
-      `;
-      const lifeCell = row.cells[11];
-      const lifePctCell = row.cells[12];
-      colorLife(lifeCell, life, data.freq);
-      colorLifePercent(lifePctCell, lifePercent);
-
-      body.appendChild(row);
-    });
-  }catch(err){
-    console.error("Load Data Gagal ❌", err);
-  }
-}
-
-// --- Add Data ---
-document.querySelector("#add-btn")?.addEventListener("click",()=>{
-  document.getElementById("add-form").style.display="block";
-});
-
-document.querySelector("#save-btn")?.addEventListener("click",async ()=>{
-  const equipment=document.getElementById("equipment").value;
-  const model=document.getElementById("model").value;
-  const component=document.getElementById("component").value;
-  const freq=parseInt(document.getElementById("freq").value)||"";
-  const cost=parseInt(document.getElementById("cost").value)||"";
-  const changeOut=parseInt(document.getElementById("changeOut").value)||"";
-
-  try{
-    await addDoc(collection(db,"componentLife"),{
-      equipment, model, component, freq, cost, changeOut,
-      rating:"", remarks:"", picture:"", currentSMU:"", nextChange:"", life:"", lifePercent:""
-    });
-    document.getElementById("add-form").style.display="none";
-    loadData();
-  }catch(err){console.error(err);}
-});
-
-// --- Delete Data ---
-document.addEventListener("click",async (e)=>{
-  if(e.target.classList.contains("delete-btn")){
-    const id = e.target.dataset.id;
-    if(confirm("Hapus data ini?")){
-      await deleteDoc(doc(db,"componentLife",id));
-      loadData();
-    }
-  }
-});
-
-// --- Filter ---
-document.querySelector("#filter-btn")?.addEventListener("click",()=>{
-  const eq = document.getElementById("filter-equipment").value.toLowerCase();
-  const comp = document.getElementById("filter-component").value.toLowerCase();
-  document.querySelectorAll("#component-body tr").forEach(row=>{
-    const tEq = row.cells[0].innerText.toLowerCase();
-    const tComp = row.cells[2].innerText.toLowerCase();
-    row.style.display=(tEq.includes(eq)&&tComp.includes(comp))?"":"none";
-  });
-});
-
-// --- Menu Switch ---
-document.querySelectorAll(".menu-btn").forEach(btn=>{
-  btn.addEventListener("click",()=>{
-    currentMenu = btn.dataset.menu;
-    document.querySelectorAll(".menu").forEach(m=>m.style.display="none");
-    document.getElementById(currentMenu).style.display="block";
-    if(currentMenu=="menu1") loadData();
-  });
-});
-
-// --- Update SMU Multi ---
-document.querySelector("#update-smu-btn")?.addEventListener("click",async ()=>{
-  const text=document.getElementById("smu-input").value.trim();
-  const lines=text.split("\n");
-  const total = lines.length;
-  let count=0;
-  const progressBar=document.getElementById("progress-bar");
-  for(const line of lines){
-    const [equipment, smuStr] = line.split(/\s+/);
-    if(!equipment||!smuStr) continue;
-    const smu = parseInt(smuStr);
-    const querySnapshot = await getDocs(collection(db,"componentLife"));
-    for(const docSnap of querySnapshot.docs){
-      const data=docSnap.data();
-      if(data.equipment===equipment){
-        const nextChange = smu + (data.freq||0);
-        await updateDoc(doc(db,"componentLife",docSnap.id),{currentSMU:smu,nextChange});
-      }
-    }
-    count++;
-    progressBar.style.width = ((count/total)*100) + "%";
-  }
-  alert("Update SMU selesai ✅");
-  progressBar.style.width="0%";
-  loadData();
-});
-
-// --- DOM Ready ---
-document.addEventListener("DOMContentLoaded",()=>{ loadData(); });
-</script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
-body{font-family:sans-serif;margin:20px;background:#f2f2f2;}
-table{border-collapse:collapse;width:100%;font-size:12px;}
-th,td{border:1px solid #ccc;padding:5px;}
-th{background:#4CAF50;color:white;cursor:pointer;}
-tr:nth-child(even){background:#f9f9f9;}
-#add-form{display:none;background:#fff;padding:10px;border:1px solid #ccc;position:absolute;top:50px;left:50%;transform:translateX(-50%);}
-button{padding:5px 10px;margin:2px;}
-.progress-container{width:100%;background:#ccc;height:15px;margin-top:5px;}
-.progress-bar{height:100%;width:0%;background:green;}
+  body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+  .tab-menu { margin-bottom: 20px; }
+  .tab-menu button { margin-right: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
+  th { background-color: #007BFF; color: white; cursor: pointer; }
+  td.number { text-align: right; }
+  .life-red { background-color: red; color: white; }
+  .life-orange { background-color: orange; color: white; }
+  .life-green { background-color: green; color: white; }
+  .life-yellow { background-color: yellow; color: black; }
+  .lifepercent-red { background-color: red; color: white; }
+  .lifepercent-orange { background-color: orange; color: white; }
+  .lifepercent-green { background-color: green; color: white; }
+  .lifepercent-yellow { background-color: yellow; color: black; }
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+  .modal-content { background-color: white; margin: 10% auto; padding: 20px; width: 400px; border-radius: 10px; }
+  .close { float: right; cursor: pointer; font-weight: bold; }
+  .progress { height: 20px; margin-top: 10px; }
+  .hidden { display: none; }
 </style>
 </head>
 <body>
 
 <h2>Component Life EM</h2>
-<button class="menu-btn" data-menu="menu1">Monitoring Component</button>
-<button class="menu-btn" data-menu="menu2">Current SMU (Update Multi)</button>
 
+<div class="tab-menu">
+  <button id="menu1-btn" class="btn btn-primary">Monitoring Component</button>
+  <button id="menu2-btn" class="btn btn-secondary">Current SMU (Update Multi)</button>
+</div>
+
+<!-- Menu 1 -->
 <div id="menu1" class="menu">
-  <h3>Monitoring Component</h3>
-  <button id="add-btn">Tambah Data</button>
-  <div id="add-form">
-    <label>Equipment: <input type="text" id="equipment"></label>
-    <label>Model: <input type="text" id="model"></label>
-    <label>Component: <input type="text" id="component"></label>
-    <label>Freq: <input type="number" id="freq"></label>
-    <label>Cost: <input type="number" id="cost"></label>
-    <label>Change Out: <input type="number" id="changeOut"></label>
-    <button id="save-btn">Save</button>
+  <div class="mb-3">
+    <input type="text" id="filter-equipment" placeholder="Filter Equipment" class="form-control" style="width:200px; display:inline-block;">
+    <input type="text" id="filter-component" placeholder="Filter Component" class="form-control" style="width:200px; display:inline-block;">
+    <button id="filter-btn" class="btn btn-info">Filter</button>
+    <button id="add-btn" class="btn btn-success">Tambah Data</button>
   </div>
 
-  <div>
-    <input type="text" id="filter-equipment" placeholder="Filter Equipment">
-    <input type="text" id="filter-component" placeholder="Filter Component">
-    <button id="filter-btn">Filter</button>
-  </div>
-
-  <table>
+  <table id="component-table">
     <thead>
       <tr>
-        <th>Equipment</th><th>Model</th><th>Component</th><th>Freq</th><th>Cost</th>
-        <th>Change Out</th><th>Rating</th><th>Remarks</th><th>Picture</th>
-        <th>Current SMU</th><th>Next Change</th><th>Life</th><th>Life %</th><th>Action</th>
+        <th>Equipment</th>
+        <th>Model</th>
+        <th>Component</th>
+        <th>Freq</th>
+        <th>Cost</th>
+        <th>Change Out</th>
+        <th>Current SMU</th>
+        <th>Next Change</th>
+        <th>Life</th>
+        <th>Life %</th>
+        <th>Rating</th>
+        <th>Remarks</th>
+        <th>Picture</th>
+        <th>Action</th>
       </tr>
     </thead>
-    <tbody id="component-body"></tbody>
+    <tbody id="component-body">
+      <!-- Data Firestore akan muncul disini -->
+    </tbody>
   </table>
 </div>
 
-<div id="menu2" class="menu" style="display:none">
-  <h3>Update Current SMU Multi</h3>
-  <textarea id="smu-input" rows="10" cols="30" placeholder="CO4402 1234"></textarea>
-  <button id="update-smu-btn">Update SMU</button>
-  <div class="progress-container"><div id="progress-bar" class="progress-bar"></div></div>
+<!-- Menu 2 -->
+<div id="menu2" class="menu hidden">
+  <h5>Update Current SMU (Multi)</h5>
+  <textarea id="smu-input" rows="6" class="form-control" placeholder="Masukkan Equipment & SMU, contoh: CO4402 1234"></textarea>
+  <button id="update-smu-btn" class="btn btn-success mt-2">Update SMU</button>
+  <div class="progress mt-2 hidden" id="update-progress">
+    <div class="progress-bar" role="progressbar" style="width:0%">0%</div>
+  </div>
 </div>
+
+<!-- Modal Tambah Data -->
+<div id="add-modal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="add-close">&times;</span>
+    <h5>Tambah Data</h5>
+    <input type="text" id="modal-equipment" placeholder="Equipment" class="form-control mb-1">
+    <input type="text" id="modal-model" placeholder="Model" class="form-control mb-1">
+    <input type="text" id="modal-component" placeholder="Component" class="form-control mb-1">
+    <input type="number" id="modal-freq" placeholder="Freq" class="form-control mb-1">
+    <input type="number" id="modal-cost" placeholder="Cost" class="form-control mb-1">
+    <input type="number" id="modal-changeOut" placeholder="Change Out" class="form-control mb-1">
+    <input type="text" id="modal-rating" placeholder="Rating" class="form-control mb-1">
+    <input type="text" id="modal-remarks" placeholder="Remarks" class="form-control mb-1">
+    <input type="file" id="modal-picture" class="form-control mb-2">
+    <button id="modal-save" class="btn btn-success">Save</button>
+    <button id="modal-cancel" class="btn btn-danger">Cancel</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
