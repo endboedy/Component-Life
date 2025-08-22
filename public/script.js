@@ -1,7 +1,6 @@
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
 import {
-  initializeFirestore,
+  getFirestore,
   collection,
   getDocs,
   addDoc,
@@ -28,10 +27,7 @@ const firebaseConfig = {
 
 // Init Firebase
 const app = initializeApp(firebaseConfig);
-const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-  useFetchStreams: false
-});
+const db = getFirestore(app);   // pakai getFirestore bukan initializeFirestore
 const storage = getStorage(app);
 
 console.log("Firebase berhasil terhubung ✅");
@@ -67,10 +63,8 @@ async function loadData() {
       body.appendChild(row);
     });
   } catch (err) {
-    if (err.code === "unavailable") {
-      alert("Koneksi Firestore gagal. Cek jaringan atau konfigurasi.");
-    }
     console.error("Gagal ambil data ❌", err);
+    alert("Koneksi Firestore gagal. Cek jaringan atau konfigurasi.");
   }
 }
 
