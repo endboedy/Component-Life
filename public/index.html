@@ -1,362 +1,207 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Component Life EM</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root{
-      --bg:#f4f6f9; --card:#fff; --text:#2c3e50; --muted:#6b7280;
-      --primary:#2563eb; --primary-d:#1d4ed8;
-      --good:#16a34a; --warn:#f59e0b; --bad:#ef4444;
-      --soft:#e5e7eb;
-    }
-    *{box-sizing:border-box}
-    body{font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;background:var(--bg);color:var(--text);margin:0;padding:24px}
-    h1{margin:0 0 12px}
-    nav{display:flex;gap:8px;margin-bottom:16px}
-    nav button{border:none;background:var(--primary);color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer}
-    nav button:hover{background:var(--primary-d)}
-    .card{background:var(--card);border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.06);padding:16px}
-    .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
-    .toolbar input[type="text"], .toolbar input[type="number"]{padding:8px 10px;border:1px solid var(--soft);border-radius:8px;min-width:160px}
-    .toolbar input[type="file"]{font-size:12px}
-    .toolbar button{border:none;padding:9px 12px;border-radius:8px;cursor:pointer}
-    .btn{background:var(--primary);color:#fff}
-    .btn:hover{background:var(--primary-d)}
-    .btn-ghost{background:#eef2ff;color:#1e40af}
-    .table-wrap{overflow:auto;border:1px solid var(--soft);border-radius:12px}
-    table{min-width:1100px;width:100%;border-collapse:collapse}
-    thead th{position:sticky;top:0;background:#111827;color:#f9fafb}
-    th, td{border-bottom:1px solid var(--soft);padding:8px 10px;text-align:left;font-weight:400;font-size:13px}
-    tbody tr:nth-child(even){background:#fafafa}
-    td img{border-radius:6px}
-    .actions button{border:none;border-radius:6px;padding:6px 10px;margin-right:6px;cursor:pointer}
-    .edit{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
-    .save{background:#ecfdf5;color:#065f46;border:1px solid #bbf7d0}
-    .delete{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
-    .hint{color:var(--muted);font-size:12px}
-    .hidden{display:none}
-    textarea{width:100%;padding:10px;border:1px solid var(--soft);border-radius:8px}
-    .status{margin-top:8px;font-size:13px}
-    .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef2ff;color:#1e40af;font-size:12px}
-    .grid{display:grid;grid-template-columns:1fr;gap:16px}
-    @media (min-width:960px){.grid{grid-template-columns:1fr 1fr}}
-  </style>
+<meta charset="UTF-8">
+<title>Component Life EM</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  h1 { text-align: center; }
+  .menu { margin-bottom: 20px; }
+  .menu button { margin-right: 10px; padding: 10px 15px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  th.right, td.right { text-align: right; }
+  button { cursor: pointer; }
+  input[type="text"], input[type="number"] { width: 100%; box-sizing: border-box; }
+</style>
 </head>
 <body>
-  <h1>Component Life EM</h1>
-  <div class="hint">Monitoring komponen & pembaruan SMU massal</div>
 
-  <nav>
-    <button id="btnMonitoring">Monitoring Component</button>
-    <button id="btnSMU">Current SMU (Update SMU Multi)</button>
-    <span class="badge" id="projectInfo"></span>
-  </nav>
+<h1>Component Life EM</h1>
 
-  <!-- Monitoring -->
-  <section id="viewMonitoring" class="card">
-    <div class="toolbar">
-      <input type="text" id="filter" placeholder="Filter…" />
-      <button class="btn-ghost" id="refresh">Refresh</button>
-      <span class="hint">Klik “Tambah Baris” untuk input cepat. Field kosong tetap bisa disimpan.</span>
-      <div style="margin-left:auto"></div>
-      <button class="btn" id="addRow">+ Tambah Baris</button>
-    </div>
+<div class="menu">
+  <button id="menu-monitor">Monitoring Component</button>
+  <button id="menu-smu">Current SMU (Update SMU Multi)</button>
+</div>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Equipment</th>
-            <th>Model</th>
-            <th>Component</th>
-            <th>Freq</th>
-            <th>Cost</th>
-            <th>Change Out</th>
-            <th>Current SMU</th>
-            <th>Next Change</th>
-            <th>Life</th>
-            <th>Life %</th>
-            <th>Picture</th>
-            <th style="min-width:180px">Action</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-  </section>
+<div id="form-add" style="display:none; margin-bottom:20px;">
+  <input type="text" id="equipment" placeholder="Equipment">
+  <input type="text" id="model" placeholder="Model">
+  <input type="text" id="component" placeholder="Component">
+  <input type="number" id="freq" placeholder="Freq">
+  <input type="number" id="cost" placeholder="Cost">
+  <input type="number" id="changeOut" placeholder="Change Out">
+  <input type="file" id="upload">
+  <button id="add-btn">Tambah</button>
+</div>
 
-  <!-- Update SMU Multi -->
-  <section id="viewSMU" class="card hidden">
-    <div class="grid">
-      <div>
-        <h3>Update Current SMU (Massal)</h3>
-        <textarea id="bulkSMU" rows="10" placeholder="CO4402 1234&#10;CO4356 2341&#10;CO4432 3412"></textarea>
-        <div class="toolbar">
-          <button class="btn" id="runBulk">Update All</button>
-          <span class="hint">Format: <code>Equipment SMU</code> dipisah spasi/Tab, satu per baris.</span>
-        </div>
-        <div class="status" id="bulkStatus"></div>
-      </div>
-      <div>
-        <h3>Panduan Perhitungan</h3>
-        <ul class="hint">
-          <li><b>Next Change</b> = Current SMU + Freq</li>
-          <li><b>Life</b> = Current SMU - Change Out</li>
-          <li><b>Life %</b> = (Life / Freq) × 100</li>
-        </ul>
-      </div>
-    </div>
-  </section>
+<input type="text" id="filter-input" placeholder="Filter...">
 
-  <!-- === Firebase + App (ESM) === -->
-  <script type="module">
-    /********** Firebase ESM imports **********/
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where
-    } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
-    import {
-      getStorage, ref, uploadBytes, getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
+<table>
+  <thead>
+    <tr>
+      <th>Equipment</th>
+      <th>Model</th>
+      <th>Component</th>
+      <th class="right">Freq</th>
+      <th class="right">Cost</th>
+      <th class="right">Change Out</th>
+      <th>Rating</th>
+      <th>Remarks</th>
+      <th>Picture</th>
+      <th class="right">Current SMU</th>
+      <th class="right">Next Change</th>
+      <th class="right">Life</th>
+      <th class="right">Life %</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="component-body"></tbody>
+</table>
 
-    /********** Firebase Config (punyamu) **********/
-    const firebaseConfig = {
-      apiKey: "AIzaSyAHQFyRifcuYJYGuiQaK9vvWJpYGfoDdmI",
-      authDomain: "component-life.firebaseapp.com",
-      projectId: "component-life",
-      storageBucket: "component-life.appspot.com",
-      messagingSenderId: "401190574281",
-      appId: "1:401190574281:web:16c2401b5bda146779d518",
-      measurementId: "G-77WF4LVS25"
-    };
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
 
-    /********** Init **********/
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
-    console.log("Firebase tersambung ✅");
-    document.getElementById("projectInfo").textContent = firebaseConfig.projectId;
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyAHQFyRifcuYJYGuiQaK9vvWJpYGfoDdmI",
+  authDomain: "component-life.firebaseapp.com",
+  projectId: "component-life",
+  storageBucket: "component-life.appspot.com",
+  messagingSenderId: "401190574281",
+  appId: "1:401190574281:web:16c2401b5bda146779d518",
+  measurementId: "G-77WF4LVS25"
+};
 
-    /********** Helpers **********/
-    const $ = sel => document.querySelector(sel);
-    const tbody = $("#tbody");
+// Init Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-    const calcDerived = (o) => {
-      const freq = Number(o.freq||0);
-      const cur  = Number(o.currentSMU||0);
-      const co   = Number(o.changeOut||0);
-      const next = cur + freq;
-      const life = cur - co;
-      const pct  = freq>0 ? ((life/freq)*100).toFixed(1) : 0;
-      return { nextChange: next, life, lifePercent: pct };
-    };
+console.log("Firebase berhasil terhubung ✅");
 
-    const rowHTML = (id, d) => {
-      return `
-        <tr data-id="${id}">
-          <td>${d.equipment ?? ""}</td>
-          <td>${d.model ?? ""}</td>
-          <td>${d.component ?? ""}</td>
-          <td>${d.freq ?? 0}</td>
-          <td>${d.cost ?? 0}</td>
-          <td>${d.changeOut ?? 0}</td>
-          <td>${d.currentSMU ?? 0}</td>
-          <td>${d.nextChange ?? 0}</td>
-          <td>${d.life ?? 0}</td>
-          <td>${d.lifePercent ?? 0}</td>
-          <td>${d.picture ? `<img src="${d.picture}" width="52" height="40" loading="lazy">` : ""}</td>
-          <td class="actions">
-            <button class="edit" data-act="edit">Edit</button>
-            <button class="delete" data-act="delete">Delete</button>
-          </td>
-        </tr>
+function formatNumber(n) {
+  if (!n && n!==0) return "";
+  return n.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+}
+
+// Load Data
+async function loadData() {
+  const body = document.getElementById("component-body");
+  if (!body) return;
+  body.innerHTML = "";
+
+  try {
+    const querySnapshot = await getDocs(collection(db, "componentLife"));
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const freq = parseInt(data.freq)||0;
+      const cost = parseInt(data.cost)||0;
+      const changeOut = parseInt(data.changeOut)||0;
+      const currentSMU = parseInt(data.currentSMU)||0;
+      const nextChange = currentSMU + freq;
+      const life = currentSMU - changeOut;
+      const lifePercent = freq ? Math.round((life/freq)*100) : 0;
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${data.equipment||""}</td>
+        <td>${data.model||""}</td>
+        <td>${data.component||""}</td>
+        <td class="right">${formatNumber(freq)}</td>
+        <td class="right">${formatNumber(cost)}</td>
+        <td class="right">${formatNumber(changeOut)}</td>
+        <td contenteditable="true">${data.rating||""}</td>
+        <td contenteditable="true">${data.remarks||""}</td>
+        <td>${data.picture ? `<img src="${data.picture}" width="50"/>` : ""}</td>
+        <td class="right">${formatNumber(currentSMU)}</td>
+        <td class="right">${formatNumber(nextChange)}</td>
+        <td class="right" style="${life>100?'background:red;color:white;':life>=86?'background:blue;color:white;':life>=76?'background:green;color:white;':life>=50?'background:yellow;color:black;':''}">${formatNumber(life)}</td>
+        <td class="right" style="${lifePercent>100?'background:red;color:white;':lifePercent>=86?'background:blue;color:white;':lifePercent>=76?'background:green;color:white;':lifePercent>=50?'background:yellow;color:black;':''}">${lifePercent}%</td>
+        <td>
+          <button class="edit-btn" data-id="${docSnap.id}">Edit</button>
+          <button class="save-btn" data-id="${docSnap.id}">Save</button>
+          <button class="delete-btn" data-id="${docSnap.id}">❌</button>
+        </td>
       `;
-    };
-
-    const rowEditHTML = (id, d) => {
-      return `
-        <tr data-id="${id}">
-          <td><input value="${d.equipment ?? ""}" data-f="equipment"></td>
-          <td><input value="${d.model ?? ""}" data-f="model"></td>
-          <td><input value="${d.component ?? ""}" data-f="component"></td>
-          <td><input type="number" value="${d.freq ?? 0}" data-f="freq"></td>
-          <td><input type="number" value="${d.cost ?? 0}" data-f="cost" step="0.01"></td>
-          <td><input type="number" value="${d.changeOut ?? 0}" data-f="changeOut"></td>
-          <td><input type="number" value="${d.currentSMU ?? 0}" data-f="currentSMU"></td>
-          <td class="hint">otomatis</td>
-          <td class="hint">otomatis</td>
-          <td class="hint">otomatis</td>
-          <td><input type="file" data-f="pictureFile" accept="image/*"></td>
-          <td class="actions">
-            <button class="save" data-act="save">Save</button>
-            <button class="delete" data-act="cancel">Cancel</button>
-          </td>
-        </tr>
-      `;
-    };
-
-    /********** Load data **********/
-    async function loadData() {
-      tbody.innerHTML = "";
-      const snap = await getDocs(collection(db, "componentLife"));
-      snap.forEach(docu => {
-        const d = docu.data();
-        tbody.insertAdjacentHTML("beforeend", rowHTML(docu.id, d));
-      });
-    }
-
-    /********** Filtering **********/
-    $("#filter").addEventListener("input", (e)=>{
-      const q = e.target.value.toLowerCase();
-      tbody.querySelectorAll("tr").forEach(tr=>{
-        tr.style.display = tr.innerText.toLowerCase().includes(q) ? "" : "none";
-      });
+      body.appendChild(row);
     });
+  } catch (err) {
+    console.error("Gagal ambil data ❌", err);
+    alert("Koneksi Firestore gagal. Cek jaringan atau konfigurasi.");
+  }
+}
 
-    /********** Add row (inline, field kosong boleh) **********/
-    $("#addRow").addEventListener("click", ()=>{
-      const empty = {
-        equipment:"", model:"", component:"",
-        freq:0, cost:0, changeOut:0, currentSMU:0, picture:""
-      };
-      tbody.insertAdjacentHTML("afterbegin", rowEditHTML("__new__", empty));
+// Tambah Data
+document.querySelector("#add-btn")?.addEventListener("click", async () => {
+  const equipment = document.getElementById("equipment").value;
+  const model = document.getElementById("model").value;
+  const component = document.getElementById("component").value;
+  const freq = document.getElementById("freq").value;
+  const cost = document.getElementById("cost").value;
+  const changeOut = document.getElementById("changeOut").value;
+
+  if (!equipment || !model || !component) {
+    alert("Mohon isi field Equipment, Model, Component ❌");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "componentLife"), {
+      equipment, model, component, freq, cost, changeOut,
+      rating:"", remarks:"", picture:"", currentSMU:""
     });
-
-    /********** Row clicks (edit/save/delete/cancel) **********/
-    tbody.addEventListener("click", async (e)=>{
-      const btn = e.target.closest("button");
-      if(!btn) return;
-      const act = btn.dataset.act;
-      const tr  = btn.closest("tr");
-      const id  = tr.dataset.id;
-
-      // edit
-      if(act==="edit"){
-        // ambil data dari tampilan saat ini
-        const tds = tr.querySelectorAll("td");
-        const cur = {
-          equipment: tds[0].textContent.trim(),
-          model:     tds[1].textContent.trim(),
-          component: tds[2].textContent.trim(),
-          freq:      Number(tds[3].textContent.trim()||0),
-          cost:      Number(tds[4].textContent.trim()||0),
-          changeOut: Number(tds[5].textContent.trim()||0),
-          currentSMU:Number(tds[6].textContent.trim()||0),
-          picture:   tr.querySelector("img")?.src || ""
-        };
-        tr.outerHTML = rowEditHTML(id, cur);
-        return;
-      }
-
-      // cancel (kembalikan tampilan read-only)
-      if(act==="cancel"){
-        if(id==="__new__"){ tr.remove(); return; }
-        const ref = doc(db,"componentLife",id);
-        const d   = (await (await getDocs(query(collection(db,"componentLife"), where("__name__","==",id)))).docs[0]).data();
-        tr.outerHTML = rowHTML(id, d);
-        return;
-      }
-
-      // save (tambah baru atau update)
-      if(act==="save"){
-        // kumpulkan nilai input
-        const inputs = tr.querySelectorAll("input");
-        const obj = {};
-        inputs.forEach(i=>{
-          const f = i.dataset.f;
-          if(f==="pictureFile") return; // file handle terpisah
-          if(["freq","cost","changeOut","currentSMU"].includes(f)){
-            obj[f] = i.value==="" ? 0 : Number(i.value);
-          }else{
-            obj[f] = i.value ?? "";
-          }
-        });
-
-        // hitung turunan
-        Object.assign(obj, calcDerived(obj));
-
-        // handle upload gambar (opsional)
-        const fileInput = tr.querySelector('input[data-f="pictureFile"]');
-        if(fileInput && fileInput.files && fileInput.files[0]){
-          const file = fileInput.files[0];
-          const key = `images/${Date.now()}-${file.name}`;
-          const sref = ref(storage, key);
-          await uploadBytes(sref, file);
-          const url = await getDownloadURL(sref);
-          obj.picture = url;
-        }
-
-        if(id==="__new__"){
-          // simpan dok baru (field kosong dipersilakan)
-          const docRef = await addDoc(collection(db,"componentLife"), obj);
-          tr.outerHTML = rowHTML(docRef.id, obj);
-        }else{
-          await updateDoc(doc(db,"componentLife",id), obj);
-          tr.outerHTML = rowHTML(id, obj);
-        }
-        return;
-      }
-
-      // delete
-      if(act==="delete"){
-        if(id==="__new__"){ tr.remove(); return; }
-        if(confirm("Hapus baris ini?")){
-          await deleteDoc(doc(db,"componentLife",id));
-          tr.remove();
-        }
-        return;
-      }
-    });
-
-    /********** Refresh **********/
-    $("#refresh").addEventListener("click", loadData);
-
-    /********** Menu switching **********/
-    const viewMonitoring = $("#viewMonitoring");
-    const viewSMU = $("#viewSMU");
-    const showMonitoring = ()=>{ viewMonitoring.classList.remove("hidden"); viewSMU.classList.add("hidden"); };
-    const showSMU = ()=>{ viewSMU.classList.remove("hidden"); viewMonitoring.classList.add("hidden"); };
-    $("#btnMonitoring").addEventListener("click", showMonitoring);
-    $("#btnSMU").addEventListener("click", showSMU);
-
-    /********** Bulk SMU update **********/
-    $("#runBulk").addEventListener("click", async ()=>{
-      const text = $("#bulkSMU").value.trim();
-      const status = $("#bulkStatus");
-      if(!text){ status.textContent="⚠️ Data kosong."; return; }
-
-      const lines = text.split(/\r?\n/);
-      let ok=0, fail=0;
-      for(const line of lines){
-        const [equipment, smuStr] = line.trim().split(/\s+/);
-        if(!equipment || !smuStr){ fail++; continue; }
-        const smu = Number(smuStr);
-        try{
-          const q = query(collection(db,"componentLife"), where("equipment","==",equipment));
-          const snap = await getDocs(q);
-          if(snap.empty){ fail++; continue; }
-          for(const d of snap.docs){
-            const cur = d.data();
-            const payload = {
-              currentSMU: smu,
-              ...calcDerived({ freq: cur.freq||0, changeOut: cur.changeOut||0, currentSMU: smu })
-            };
-            await updateDoc(doc(db,"componentLife", d.id), payload);
-            ok++;
-          }
-        }catch(e){
-          console.error("Gagal update", equipment, e);
-          fail++;
-        }
-      }
-      status.textContent = `✅ Sukses: ${ok} • ❌ Gagal: ${fail}`;
-      await loadData();
-    });
-
-    // start
+    alert("Data berhasil ditambahkan ✅");
     await loadData();
-  </script>
+  } catch(err){
+    console.error("Gagal tambah data ❌", err);
+  }
+});
+
+// Delete
+document.addEventListener("click", async (e)=>{
+  if(e.target.classList.contains("delete-btn")){
+    const id = e.target.dataset.id;
+    if(confirm("Yakin ingin hapus data ini?")){
+      try{
+        await deleteDoc(doc(db,"componentLife",id));
+        await loadData();
+      }catch(err){
+        console.error("Gagal hapus data ❌", err);
+      }
+    }
+  }
+});
+
+// Save Rating & Remarks
+document.addEventListener("click", async (e)=>{
+  if(e.target.classList.contains("save-btn")){
+    const id = e.target.dataset.id;
+    const row = e.target.closest("tr");
+    const rating = row.cells[6].innerText;
+    const remarks = row.cells[7].innerText;
+    try{
+      await updateDoc(doc(db,"componentLife",id), {rating,remarks});
+      alert("Data berhasil disimpan ✅");
+      await loadData();
+    }catch(err){
+      console.error("Gagal update ❌", err);
+    }
+  }
+});
+
+// Filter
+document.querySelector("#filter-input")?.addEventListener("input", (e)=>{
+  const keyword = e.target.value.toLowerCase();
+  document.querySelectorAll("#component-body tr").forEach(row=>{
+    row.style.display = row.innerText.toLowerCase().includes(keyword) ? "" : "none";
+  });
+});
+
+document.addEventListener("DOMContentLoaded", ()=>{ loadData(); });
+</script>
+
 </body>
 </html>
