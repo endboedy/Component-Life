@@ -87,3 +87,14 @@ button.save {
   background: red !important;
   color: white !important;
 }
+/* 🔹 Tambahan untuk kolom angka */
+.text-right {
+  text-align: right;
+}
+
+/* 🔹 Kalau mau kasih style khusus persen */
+.percent {
+  text-align: right;
+  font-weight: bold;
+  color: #2c3e50;
+}
