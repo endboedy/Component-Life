@@ -56,7 +56,7 @@ async function loadData() {
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data();
 
-     // Buat row tabel
+    // Buat row tabel
 const row = document.createElement("tr");
 
 row.innerHTML = `
@@ -64,14 +64,14 @@ row.innerHTML = `
   <td>${data.model ?? ""}</td>
   <td>${data.component ?? ""}</td>
   <td class="num-cell">${formatNumber(data.freq)}</td>
-  <td class="num-cell">${formatNumber(data.cost)}</td>       
-  <td class="num-cell">${formatNumber(data.changeOut)}</td> 
+  <td class="num-cell">${formatNumber(data.cost)}</td>
+  <td class="num-cell">${formatNumber(data.changeOut)}</td>
   <td>${data.rating ?? ""}</td>
   <td>${data.remarks ?? ""}</td>
-  <td class="num-cell">${formatNumber(data.currentSMU)}</td> 
-  <td class="num-cell">${formatNumber(data.nextChange)}</td> 
-  <td class="num-cell">${formatNumber(data.life)}</td>       
-  <td class="num-cell">${formatPercent(data.lifePercent)}</td> 
+  <td class="num-cell">${formatNumber(data.currentSMU)}</td>
+  <td class="num-cell">${formatNumber(data.nextChange)}</td>
+  <td class="num-cell">${formatNumber(data.life)}</td>
+  <td class="num-cell">${formatPercent(data.lifePercent)}</td>
   <td>
     <button class="delete-btn" data-id="${docSnap.id}" title="Hapus Data">
       ❌
@@ -169,4 +169,5 @@ document.querySelector("#filter-input")?.addEventListener("input", async (e) => 
 document.addEventListener("DOMContentLoaded", () => {
   loadData();
 });
+
 
