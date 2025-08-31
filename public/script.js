@@ -55,22 +55,30 @@ async function loadData() {
     const querySnapshot = await getDocs(collection(db, "componentLife"));
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data();
+
+      // Buat row tabel
       const row = document.createElement("tr");
+
       row.innerHTML = `
-        <td>${data.equipment || ""}</td>
-        <td>${data.model || ""}</td>
-        <td>${data.component || ""}</td>
-        <td>${data.freq || ""}</td>
+        <td>${data.equipment ?? ""}</td>
+        <td>${data.model ?? ""}</td>
+        <td>${data.component ?? ""}</td>
+        <td style="text-align:right;">${formatNumber(data.freq)}</td>
         <td style="text-align:right;">${formatNumber(data.cost)}</td>
         <td style="text-align:right;">${formatNumber(data.changeOut)}</td>
-        <td>${data.rating || ""}</td>
-        <td>${data.remarks || ""}</td>
+        <td>${data.rating ?? ""}</td>
+        <td>${data.remarks ?? ""}</td>
         <td style="text-align:right;">${formatNumber(data.currentSMU)}</td>
         <td style="text-align:right;">${formatNumber(data.nextChange)}</td>
         <td style="text-align:right;">${formatNumber(data.life)}</td>
         <td style="text-align:right;">${formatPercent(data.lifePercent)}</td>
-        <td><button class="delete-btn" data-id="${docSnap.id}">❌</button></td>
+        <td>
+          <button class="delete-btn" data-id="${docSnap.id}" title="Hapus Data">
+            ❌
+          </button>
+        </td>
       `;
+
       body.appendChild(row);
     });
   } catch (err) {
@@ -161,3 +169,4 @@ document.querySelector("#filter-input")?.addEventListener("input", async (e) => 
 document.addEventListener("DOMContentLoaded", () => {
   loadData();
 });
+
