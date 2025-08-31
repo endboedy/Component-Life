@@ -45,7 +45,8 @@ body {
   cursor: pointer;
 }
 
-#component-table, #smu-table {
+#component-table, 
+#smu-table {
   width: 100%;
   border-collapse: collapse;
   margin: 15px;
@@ -57,7 +58,7 @@ body {
 #smu-table th, #smu-table td {
   border: 1px solid #ddd;
   padding: 8px;
-  text-align: center;
+  text-align: center;   /* default center */
 }
 
 #component-table th {
@@ -87,14 +88,22 @@ button.save {
   background: red !important;
   color: white !important;
 }
+
 /* 🔹 Tambahan untuk kolom angka */
 .text-right {
   text-align: right;
 }
 
-/* 🔹 Kalau mau kasih style khusus persen */
+/* 🔹 Style khusus persen */
 .percent {
   text-align: right;
   font-weight: bold;
   color: #2c3e50;
+}
+
+/* ✅ Override untuk cell angka agar pasti rata kanan */
+#component-table td.num-cell,
+#smu-table td.num-cell {
+  text-align: right !important;
+  white-space: nowrap;
 }
