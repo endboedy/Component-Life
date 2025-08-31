@@ -27,10 +27,22 @@ const firebaseConfig = {
 
 // Init Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);   // pakai getFirestore bukan initializeFirestore
+const db = getFirestore(app);
 const storage = getStorage(app);
 
 console.log("Firebase berhasil terhubung ✅");
+
+// 🔹 Helper format angka ribuan
+function formatNumber(value) {
+  if (value === undefined || value === null || value === "") return "";
+  return Number(value).toLocaleString("id-ID"); // titik pemisah ribuan
+}
+
+// 🔹 Helper format persen
+function formatPercent(value) {
+  if (value === undefined || value === null || value === "") return "";
+  return `${Number(value).toFixed(0)} %`;
+}
 
 // Load Data
 async function loadData() {
@@ -49,15 +61,14 @@ async function loadData() {
         <td>${data.model || ""}</td>
         <td>${data.component || ""}</td>
         <td>${data.freq || ""}</td>
-        <td>${data.cost || ""}</td>
-        <td>${data.changeOut || ""}</td>
+        <td style="text-align:right;">${formatNumber(data.cost)}</td>
+        <td style="text-align:right;">${formatNumber(data.changeOut)}</td>
         <td>${data.rating || ""}</td>
         <td>${data.remarks || ""}</td>
-        <td>${data.picture ? `<img src="${data.picture}" width="50"/>` : ""}</td>
-        <td>${data.currentSMU || ""}</td>
-        <td>${data.nextChange || ""}</td>
-        <td>${data.life || ""}</td>
-        <td>${data.lifePercent || ""}</td>
+        <td style="text-align:right;">${formatNumber(data.currentSMU)}</td>
+        <td style="text-align:right;">${formatNumber(data.nextChange)}</td>
+        <td style="text-align:right;">${formatNumber(data.life)}</td>
+        <td style="text-align:right;">${formatPercent(data.lifePercent)}</td>
         <td><button class="delete-btn" data-id="${docSnap.id}">❌</button></td>
       `;
       body.appendChild(row);
@@ -88,8 +99,7 @@ document.querySelector("#add-btn")?.addEventListener("click", async () => {
       cost: "",
       changeOut: "",
       rating: "",
-      remarks: "",
-      picture: "",
+      remarks: "",   // 🔹 sudah dipakai untuk free text
       currentSMU: "",
       nextChange: "",
       life: "",
@@ -117,7 +127,7 @@ document.addEventListener("click", async (e) => {
   }
 });
 
-// Upload Gambar
+// Upload Gambar (opsional kalau tetap mau simpan gambar di storage)
 document.querySelector("#upload")?.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
