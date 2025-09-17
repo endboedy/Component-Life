@@ -66,16 +66,14 @@ row.innerHTML = `
   <td class="num-cell">${formatNumber(data.freq)}</td>
   <td class="num-cell">${formatNumber(data.cost)}</td>
   <td class="num-cell">${formatNumber(data.changeOut)}</td>
-  <td>${data.rating ?? ""}</td>
-  <td>${data.remarks ?? ""}</td>
   <td class="num-cell">${formatNumber(data.currentSMU)}</td>
   <td class="num-cell">${formatNumber(data.nextChange)}</td>
   <td class="num-cell">${formatNumber(data.life)}</td>
-  <td class="num-cell">${formatPercent(data.lifePercent)}</td>
+  <td class="percent">${formatPercent(data.lifePercent)}</td>
+  <td>${data.rating ?? ""}</td>
+  <td>${data.remarks ?? ""}</td>
   <td>
-    <button class="delete-btn" data-id="${docSnap.id}" title="Hapus Data">
-      ❌
-    </button>
+    <button class="delete-btn" data-id="${docSnap.id}" title="Hapus Data">❌</button>
   </td>
 `;
 
@@ -169,5 +167,6 @@ document.querySelector("#filter-input")?.addEventListener("input", async (e) => 
 document.addEventListener("DOMContentLoaded", () => {
   loadData();
 });
+
 
 
