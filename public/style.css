@@ -58,7 +58,7 @@ body {
 #smu-table th, #smu-table td {
   border: 1px solid #ddd;
   padding: 8px;
-  text-align: center;   /* default center */
+  text-align: center;   /* default center untuk teks */
 }
 
 #component-table th {
@@ -103,7 +103,17 @@ button.save {
 
 /* ✅ Override untuk cell angka agar pasti rata kanan */
 #component-table td.num-cell,
-#smu-table td.num-cell {
+#smu-table td.num-cell,
+#component-table td.percent,
+#smu-table td.percent {
   text-align: right !important;
   white-space: nowrap;
+}
+
+/* 🔹 Rata kanan juga untuk input di edit mode */
+#component-table input.num-cell,
+#smu-table input.num-cell,
+#component-table input.percent,
+#smu-table input.percent {
+  text-align: right;
 }
