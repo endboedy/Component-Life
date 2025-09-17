@@ -35,7 +35,7 @@ console.log("Firebase berhasil terhubung ✅");
 // 🔹 Helper format angka ribuan
 function formatNumber(value) {
   if (value === undefined || value === null || value === "") return "";
-  return Number(value).toLocaleString("id-ID"); // titik pemisah ribuan
+  return Number(value).toLocaleString("id-ID");
 }
 
 // 🔹 Helper format persen
@@ -44,7 +44,7 @@ function formatPercent(value) {
   return `${Number(value).toFixed(0)} %`;
 }
 
-// Load Data
+// 🔹 Load Data
 async function loadData() {
   const body = document.getElementById("component-body");
   if (!body) return;
@@ -56,26 +56,26 @@ async function loadData() {
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data();
 
-    // Buat row tabel
-const row = document.createElement("tr");
-
-row.innerHTML = `
-  <td>${data.equipment ?? ""}</td>
-  <td>${data.model ?? ""}</td>
-  <td>${data.component ?? ""}</td>
-  <td class="num-cell">${formatNumber(data.freq)}</td>
-  <td class="num-cell">${formatNumber(data.cost)}</td>
-  <td class="num-cell">${formatNumber(data.changeOut)}</td>
-  <td class="num-cell">${formatNumber(data.currentSMU)}</td>
-  <td class="num-cell">${formatNumber(data.nextChange)}</td>
-  <td class="num-cell">${formatNumber(data.life)}</td>
-  <td class="percent">${formatPercent(data.lifePercent)}</td>
-  <td>${data.rating ?? ""}</td>
-  <td>${data.remarks ?? ""}</td>
-  <td>
-    <button class="delete-btn" data-id="${docSnap.id}" title="Hapus Data">❌</button>
-  </td>
-`;
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${data.equipment ?? ""}</td>
+        <td>${data.model ?? ""}</td>
+        <td>${data.component ?? ""}</td>
+        <td class="num-cell">${formatNumber(data.freq)}</td>
+        <td class="num-cell">${formatNumber(data.cost)}</td>
+        <td class="num-cell">${formatNumber(data.changeOut)}</td>
+        <td class="num-cell">${formatNumber(data.currentSMU)}</td>
+        <td class="num-cell">${formatNumber(data.nextChange)}</td>
+        <td class="num-cell">${formatNumber(data.life)}</td>
+        <td class="percent">${formatPercent(data.lifePercent)}</td>
+        <td>${data.rating ?? ""}</td>
+        <td>${data.remarks ?? ""}</td>
+        <td>
+          <button class="delete-btn" data-id="${docSnap.id}" title="Hapus Data">❌</button>
+        </td>
+      `;
+      // Pastikan rata kanan
+      row.querySelectorAll(".num-cell, .percent").forEach(td => td.style.textAlign = "right");
 
       body.appendChild(row);
     });
@@ -85,7 +85,7 @@ row.innerHTML = `
   }
 }
 
-// Tambah Data
+// 🔹 Tambah Data
 document.querySelector("#add-btn")?.addEventListener("click", async () => {
   const equipment = document.getElementById("equipment").value;
   const model = document.getElementById("model").value;
@@ -101,15 +101,15 @@ document.querySelector("#add-btn")?.addEventListener("click", async () => {
       equipment,
       model,
       component,
-      freq: "",
-      cost: "",
-      changeOut: "",
+      freq: 0,
+      cost: 0,
+      changeOut: 0,
       rating: "",
-      remarks: "",   
-      currentSMU: "",
-      nextChange: "",
-      life: "",
-      lifePercent: ""
+      remarks: "",
+      currentSMU: 0,
+      nextChange: 0,
+      life: 0,
+      lifePercent: 0
     });
     alert("Data berhasil ditambahkan ✅");
     await loadData();
@@ -118,7 +118,7 @@ document.querySelector("#add-btn")?.addEventListener("click", async () => {
   }
 });
 
-// Hapus Data
+// 🔹 Hapus Data
 document.addEventListener("click", async (e) => {
   if (e.target.classList.contains("delete-btn")) {
     const id = e.target.dataset.id;
@@ -133,7 +133,7 @@ document.addEventListener("click", async (e) => {
   }
 });
 
-// Upload Gambar
+// 🔹 Upload Gambar (opsional)
 document.querySelector("#upload")?.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -144,7 +144,7 @@ document.querySelector("#upload")?.addEventListener("change", async (e) => {
   }
 
   try {
-    const storageRef = ref(storage, "images/" + file.name);
+    const storageRef = ref(storage, "images/" + Date.now() + "-" + file.name);
     await uploadBytes(storageRef, file);
     const url = await getDownloadURL(storageRef);
     alert("Upload berhasil ✅ URL: " + url);
@@ -153,7 +153,7 @@ document.querySelector("#upload")?.addEventListener("change", async (e) => {
   }
 });
 
-// Filter Data
+// 🔹 Filter Data
 document.querySelector("#filter-input")?.addEventListener("input", async (e) => {
   const keyword = e.target.value.toLowerCase();
   const rows = document.querySelectorAll("#component-body tr");
@@ -163,11 +163,7 @@ document.querySelector("#filter-input")?.addEventListener("input", async (e) => 
   });
 });
 
-// Load saat DOM siap
+// 🔹 Load saat DOM siap
 document.addEventListener("DOMContentLoaded", () => {
   loadData();
 });
-
-
-
-
