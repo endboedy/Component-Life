@@ -4,6 +4,7 @@ body {
   background: #f5f6fa;
 }
 
+/* Header */
 .app-header {
   background: #34495e;
   color: white;
@@ -27,6 +28,7 @@ body {
   background: #2980b9;
 }
 
+/* Toolbar */
 .toolbar {
   margin: 15px;
 }
@@ -45,20 +47,29 @@ body {
   cursor: pointer;
 }
 
+/* Wrapper scrollable */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto; /* memungkinkan scroll horizontal */
+  margin: 15px 0;
+}
+
+/* Tabel */
 #component-table, 
 #smu-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 15px;
   background: white;
   box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  min-width: 800px; /* pastikan tabel tidak terlalu kecil */
 }
 
 #component-table th, #component-table td,
 #smu-table th, #smu-table td {
   border: 1px solid #ddd;
   padding: 8px;
-  text-align: center;   /* default center untuk teks */
+  text-align: center; /* default center */
+  white-space: nowrap; /* cegah teks membungkus */
 }
 
 #component-table th {
@@ -66,6 +77,13 @@ body {
   color: white;
 }
 
+/* Hover baris */
+#component-table tr:hover,
+#smu-table tr:hover {
+  background: #ecf0f1;
+}
+
+/* Tombol edit/save */
 button.edit, button.save {
   padding: 5px 8px;
   margin: 2px;
@@ -89,19 +107,18 @@ button.save {
   color: white !important;
 }
 
-/* 🔹 Tambahan untuk kolom angka */
+/* 🔹 Kolom angka dan persen */
 .text-right {
   text-align: right;
 }
 
-/* 🔹 Style khusus persen */
 .percent {
   text-align: right;
   font-weight: bold;
   color: #2c3e50;
 }
 
-/* ✅ Override untuk cell angka agar pasti rata kanan */
+/* Override cell angka agar rata kanan */
 #component-table td.num-cell,
 #smu-table td.num-cell,
 #component-table td.percent,
@@ -110,10 +127,22 @@ button.save {
   white-space: nowrap;
 }
 
-/* 🔹 Rata kanan juga untuk input di edit mode */
+/* Input di edit mode */
 #component-table input.num-cell,
 #smu-table input.num-cell,
 #component-table input.percent,
 #smu-table input.percent {
   text-align: right;
+}
+
+/* Responsif mobile */
+@media (max-width: 768px) {
+  .toolbar input, #add-new {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .menu button {
+    margin: 5px 0;
+  }
 }
